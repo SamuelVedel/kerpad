@@ -1,5 +1,6 @@
 #include <stdlib.h>
-#include <X11/Xlib.h>
+#include <linux/uinput.h>
+#include <fcntl.h>
 #include <bpf/libbpf.h>
 #include <unistd.h>
 
@@ -36,6 +37,57 @@ void init_sighanlder() {
 			"error on sigemptyset");
 	exit_if(sigaction(SIGINT, &new_sig, &old_sig) == -1,
 			"error on sigaction");
+}
+
+int init_ui_fd() {
+	int fd = open("/dev/uinput", O_WRONLY|O_NONBLOCK);
+	exit_if(fd == -1, "Faile to open /dev/uinput");
+	struct uinput_setup usetup = {};
+	
+	ioctl(fd, UI_SET_EVBIT, EV_KEY);
+	ioctl(fd, UI_SET_KEYBIT, BTN_LEFT);
+	
+	ioctl(fd, UI_SET_EVBIT, EV_REL);
+	ioctl(fd, UI_SET_RELBIT, REL_X);
+	ioctl(fd, UI_SET_RELBIT, REL_Y);
+	
+	usetup.id.bustype = BUS_USB;
+	usetup.id.vendor = 0x1234;
+	usetup.id.product = 0x5678;
+	strcpy(usetup.name, "kerpad mouse");
+	ioctl(fd, UI_DEV_SETUP, &usetup);
+	ioctl(fd, UI_DEV_CREATE);
+	sleep(1);
+	
+	return fd;
+}
+
+void destroy_ui_fd(int fd) {
+	sleep(1);
+	ioctl(fd, UI_DEV_DESTROY);
+	close(fd);
+}
+
+void emit(int fd, int type, int code, int val) {
+	struct input_event ie = {
+		.type = type,
+		.code = code,
+		.value = val
+	};
+	ie.time.tv_sec = 0;
+	ie.time.tv_usec = 0;
+	
+	exit_if(write(fd, &ie, sizeof(ie)) == -1, "Failed to whire on /dev/uinput");
+}
+
+void move_x(int fd, int x) {
+	emit(fd, EV_REL, REL_X, x);
+	emit(fd, EV_SYN, SYN_REPORT, 0);
+}
+
+void move_y(int fd, int y) {
+	emit(fd, EV_REL, REL_Y, y);
+	emit(fd, EV_SYN, SYN_REPORT, 0);
 }
 
 int main() {
@@ -76,28 +128,28 @@ int main() {
 	
 	init_sighanlder();
 	
+	int ui_fd = init_ui_fd();
 	while (running) {
-		Display *dpy = XOpenDisplay(NULL);
 		int key = 0;
 		int value;
 		// x
 		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY) == 0) {
-			if (value == -1) XWarpPointer(dpy, None, None, 0, 0, 0, 0, -CURSOR_SPEED, 0);
-			else if (value == 1) XWarpPointer(dpy, None, None, 0, 0, 0, 0, CURSOR_SPEED, 0);
+			if (value == -1) move_x(ui_fd, -CURSOR_SPEED);
+			else if (value == 1) move_x(ui_fd, CURSOR_SPEED);
 			value = 0;
 			bpf_map__update_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY);
 		}
 		// y
 		key = 1;
 		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY) == 0) {
-			if (value == -1) XWarpPointer(dpy, None, None, 0, 0, 0, 0, 0, -CURSOR_SPEED);
-			else if (value == 1) XWarpPointer(dpy, None, None, 0, 0, 0, 0, 0, CURSOR_SPEED);
+			if (value == -1) move_y(ui_fd, -CURSOR_SPEED);
+			else if (value == 1) move_y(ui_fd, CURSOR_SPEED);
 			value = 0;
 			bpf_map__update_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY);
 		}
-		XCloseDisplay(dpy);
 		usleep(1000);
 	}
+	destroy_ui_fd(ui_fd);
 	
 	bpf_link__detach(link);
 	bpf_link__destroy(link);
