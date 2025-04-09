@@ -1,22 +1,26 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
+LDLIBS = -lbpf
 
-out = build
+OUT = build
+BPF = bpf
+USR = user
 
 all: kerpad
 
-$(out)/%.bpf.o: bpf/%.bpf.c
-	ecc $< -o $(out)
+$(OUT)/%.bpf.o: $(BPF)/%.bpf.c
+	ecc $< -o $(OUT) -n
 
-$(out)/%.o: user/%.c
+$(OUT)/%.o: $(USR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(out)/usrpad.o: $(out)/kerpad.bpf.o
+kerpad: $(OUT)/usrpad.o $(OUT)/kerpad.bpf.o
+	$(CC) $< -o $@ $(LDLIBS)
 
 kerpad: $(out)/usrpad.o
 	$(CC) $^ -o $@ $(LDLIBS)
 
 clean:
-	rm -f $(out)/* kerpar *~ */*~
+	rm -f $(OUT)/* kerpar *~ */*~
 
 .PHONY: all clean
