@@ -133,7 +133,8 @@ int main() {
 		int key = 0;
 		int value;
 		// x
-		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY) == 0) {
+		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY) == 0
+			&& value) {
 			if (value == -1) move_x(ui_fd, -CURSOR_SPEED);
 			else if (value == 1) move_x(ui_fd, CURSOR_SPEED);
 			value = 0;
@@ -141,7 +142,8 @@ int main() {
 		}
 		// y
 		key = 1;
-		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY) == 0) {
+		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY) == 0
+			&& value) {
 			if (value == -1) move_y(ui_fd, -CURSOR_SPEED);
 			else if (value == 1) move_y(ui_fd, CURSOR_SPEED);
 			value = 0;
