@@ -17,10 +17,14 @@ $(OUT)/%.o: $(USR)/%.c
 kerpad: $(OUT)/usrpad.o $(OUT)/kerpad.bpf.o
 	$(CC) $< -o $@ $(LDLIBS)
 
-kerpad: $(out)/usrpad.o
-	$(CC) $^ -o $@ $(LDLIBS)
+coorpad: $(BPF)/coorpad.bpf.c $(BPF)/coorpad.h
+	cp $(BPF)/coorpad.h $(OUT)
+	ecc $^ -o $(OUT)
+
+run_coorpad:
+	ecli $(OUT)/package.json
 
 clean:
 	rm -f $(OUT)/* kerpar *~ */*~
 
-.PHONY: all clean
+.PHONY: all clean coorpad run_coorpad
