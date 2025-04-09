@@ -136,9 +136,14 @@ int main() {
 	while (running) {
 		int key = 0;
 		int value;
+		// to know if x of y border was hit
+		int x = 0;
+		int y = 0;
 		// x
-		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY) == 0
+		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value,
+								 sizeof(value), BPF_ANY) == 0
 			&& value) {
+			x = 1;
 			if (value == -1) move_x(ui_fd, -CURSOR_SPEED);
 			else if (value == 1) move_x(ui_fd, CURSOR_SPEED);
 			value = 0;
@@ -146,14 +151,17 @@ int main() {
 		}
 		// y
 		key = 1;
-		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY) == 0
+		if (bpf_map__lookup_elem(map, &key, sizeof(key), &value,
+								 sizeof(value), BPF_ANY) == 0
 			&& value) {
+			y = 1;
 			if (value == -1) move_y(ui_fd, -CURSOR_SPEED);
 			else if (value == 1) move_y(ui_fd, CURSOR_SPEED);
 			value = 0;
 			bpf_map__update_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY);
 		}
-		usleep(SLEEP_TIME);
+		if (!x || !y) usleep(SLEEP_TIME);
+		else usleep(SLEEP_TIME*14);
 	}
 	destroy_ui_fd(ui_fd);
 	
