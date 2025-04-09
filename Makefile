@@ -1,6 +1,5 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
-LDLIBS = -lbpf -lX11
 
 out = build
 
