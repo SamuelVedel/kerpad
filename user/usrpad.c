@@ -7,6 +7,10 @@
 #include <errno.h>
 #include <signal.h>
 
+// Sleep time in miliseconds
+// before each actions
+#define SLEEP_TIME 1000
+// Speed of the cursor in pixels
 #define CURSOR_SPEED 2
 
 int running = 1;
@@ -149,7 +153,7 @@ int main() {
 			value = 0;
 			bpf_map__update_elem(map, &key, sizeof(key), &value, sizeof(value), BPF_ANY);
 		}
-		usleep(1000);
+		usleep(SLEEP_TIME);
 	}
 	destroy_ui_fd(ui_fd);
 	
