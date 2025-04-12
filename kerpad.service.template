@@ -1,0 +1,11 @@
+[Unit]
+Description=Makes the mouse move while touching the edge of a touchpad using ebpf
+After=default.target
+
+[Service]
+ExecStart=/usr/bin/kerpad -b <bpf-object-path>
+Type=notify
+Restart=always
+
+[Install]
+WantedBy=default.target
