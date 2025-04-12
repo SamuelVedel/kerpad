@@ -11,6 +11,7 @@ To do that it uses an ebpf program that hooks a specific function of the linux k
 To compile, this program depends on
  - clang
  - llvm
+ - libsystemd
  - libbpf (see [https://github.com/libbpf/libbpf](https://github.com/libbpf/libbpf))
  - ecc and ecli (see [https://github.com/eunomia-bpf/eunomia-bpf](https://github.com/eunomia-bpf/eunomia-bpf))
 
