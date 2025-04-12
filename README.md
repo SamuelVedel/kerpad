@@ -37,7 +37,7 @@ sudo ./kerpad -b <path/to/kerpad.bpf.o>
 
 If you want this program to run at the boot of you system, you can run:
 ```
-sudo make install
+make install
 sudo systemctl daemon-reload
 sudo systemctl enable kerpad.service
 ```
@@ -60,7 +60,7 @@ The edge limits are the limits on the touchpad after which the the mouse will st
 To determine which edge limits fits the best for you, I programmed another ebpf program that print the coordinates on the touchpad while touching it. To use it, you can simply do:
 ```
 make coorpad
-sudo make run_coorpad
+make run_coorpad
 ```
 And then you will see the coordinates while touching the touchpad.
 

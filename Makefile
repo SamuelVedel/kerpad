@@ -23,15 +23,15 @@ kerpad.service: kerpad.service.template
 	cat kerpad.service.template | sed "s/<bpf-object-path>/$(shell echo $(BPF_OBJECT) | sed 's/\//\\\//g')/" > kerpad.service
 
 install: kerpad kerpad.service
-	cp ./kerpad /usr/bin/kerpad
-	cp kerpad.service /usr/lib/systemd/system/kerpad.service
+	sudo cp ./kerpad /usr/bin/kerpad
+	sudo cp kerpad.service /usr/lib/systemd/system/kerpad.service
 
 coorpad: $(BPF)/coorpad.bpf.c $(BPF)/coorpad.h
 	cp $(BPF)/coorpad.h $(OUT)
 	ecc $^ -o $(OUT)
 
-run_coorpad:
-	ecli $(OUT)/package.json
+run_coorpad: coorpad
+	sudo ecli $(OUT)/package.json
 
 clean:
 	rm -f $(OUT)/* kerpar kerpad.service *~ */*~
