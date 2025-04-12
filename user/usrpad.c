@@ -31,6 +31,22 @@ void exit_if(int condition, const char *prefix) {
 	}
 }
 
+void block_sigint() {
+	sigset_t set;
+	sigemptyset(&set);
+	sigaddset(&set, SIGINT);
+	exit_if(sigprocmask(SIG_BLOCK, &set, NULL) == -1,
+			"error while blocking SIGINT");
+}
+
+void unblock_sigint() {
+	sigset_t set;
+	sigemptyset(&set);
+	sigaddset(&set, SIGINT);
+	exit_if(sigprocmask(SIG_UNBLOCK, &set, NULL) == -1,
+			"error while unblocking SIGINT");
+}
+
 void init_sighanlder() {
 	struct sigaction old_sig;
 	struct sigaction new_sig = {
@@ -95,6 +111,7 @@ void move_y(int fd, int y) {
 }
 
 int main() {
+	block_sigint();
 	struct bpf_object *obj;
 	struct bpf_map *map;
 	int err;
@@ -131,6 +148,7 @@ int main() {
 	}
 	
 	init_sighanlder();
+	unblock_sigint();
 	
 	int ui_fd = init_ui_fd();
 	while (running) {
