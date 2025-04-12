@@ -15,7 +15,7 @@ To compile, this program depends on
  - ecc and ecli (see [https://github.com/eunomia-bpf/eunomia-bpf](https://github.com/eunomia-bpf/eunomia-bpf))
 
 ecc and ecli program need to be in a place referenced by `$PATH` (like `/usr/bin/` for instance).
-ecli is not necessary if you dont use coorpad (see [Configure the edge limits](#configure-the-edge-limits))
+ecli is not necessary if you dont use coorpad (see n[Configure the edge limits](#configure-the-edge-limits))
 
 ### Compile and run it
 
@@ -28,9 +28,28 @@ And run it with the command:
 sudo ./kerpad
 ```
 
-Note that you need to be in the kerpad directory to run this program. It is something to improve in the future.
+While the program is running, you can stop it by typing `CTRL-C`
 
-While the program is running, you can stop it by typing CTRL-C
+If you are not in the project directory or if you have moved the `build/kerpad.bpf.o` file, you can specify the path to this file by typing:
+```
+sudo ./kerpad -b <path/to/kerpad.bpf.o>
+```
+
+If you want this program to run at the boot of you system, you can run:
+```
+sudo make install
+sudo systemctl daemon-reload
+sudo systemctl enable kerpad.service
+```
+This will install and enable a systemd service for kerpad (it will also copy `kerpad` to `/usr/bin`).
+
+If you have moved `build/kerpad.bpf.o`, run
+```
+BPF_OBJECT=</absolute/path/to/kerpad.bpf.o> make kerpad.service
+```
+before the previous commands (you may have to remove `kerpad.service` if it already exists)
+
+You can change the template for `kerpad.service` by editing `kerpad.service.template`
 
 ## How to configurate it
 
