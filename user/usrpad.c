@@ -13,6 +13,11 @@
 // Speed of the cursor in pixels
 #define CURSOR_SPEED 2
 
+#define PATH_SIZE 100
+
+// path to the bpf object file
+char bpf_object_path[PATH_SIZE] = "build/kerpad.bpf.o";
+
 int running = 1;
 
 void handler() {
@@ -110,14 +115,41 @@ void move_y(int fd, int y) {
 	emit(fd, EV_SYN, SYN_REPORT, 0);
 }
 
-int main() {
+void print_help() {
+	printf("Usage: ./kerpad [-b <path/to/kerpad.bpf.o>]\n");
+	printf("    -b    path to the bpf object file, by default: build/kerpad.bpf.o\n");
+}
+
+int parse_args(int argc, char *argv[]) {
+	int opt;
+	while ((opt = getopt(argc, argv, "b:h")) != -1) {
+		switch (opt) {
+		case 'b':
+			strcpy(bpf_object_path, optarg);
+			break;
+		case 'h':
+			print_help();
+			return 0;
+		case '?':
+			print_help();
+			return 0;
+		}
+	}
+	return 1;
+}
+
+int main(int argc, char *argv[]) {
 	block_sigint();
+	
+	if (!parse_args(argc, argv))
+		return EXIT_FAILURE;
+	
 	struct bpf_object *obj;
 	struct bpf_map *map;
 	int err;
 	
 	// Load the eBPF object file
-	obj = bpf_object__open_file("build/kerpad.bpf.o", NULL);
+	obj = bpf_object__open_file(bpf_object_path, NULL);
 	if (libbpf_get_error(obj)) {
 		fprintf(stderr, "Failed to open BPF object\n");
 		return 1;
