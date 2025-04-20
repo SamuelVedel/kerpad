@@ -1,5 +1,5 @@
 [Unit]
-Description=Makes the mouse move while touching the edge of a touchpad using ebpf
+Description=Edge motion
 After=default.target
 
 [Service]
