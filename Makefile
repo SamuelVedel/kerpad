@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
-LDLIBS = -lbpf -lsystemd
+LDLIBS = -lbpf #-lsystemd
 
 OUT = build
 BPF = bpf

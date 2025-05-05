@@ -4,7 +4,7 @@ After=default.target
 
 [Service]
 ExecStart=/usr/bin/kerpad -b <bpf-object-path>
-Type=notify
+Type=exec
 Restart=always
 
 [Install]

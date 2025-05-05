@@ -6,7 +6,7 @@
 
 #include <errno.h>
 #include <signal.h>
-#include <systemd/sd-daemon.h>
+//#include <systemd/sd-daemon.h>
 
 // Sleep time in miliseconds
 // before each actions
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
 	
 	int ui_fd = init_ui_fd();
 	
-	sd_notify(0, "READY=1");
+	//sd_notify(0, "READY=1");
 	while (running) {
 		int key = 0;
 		int value;
