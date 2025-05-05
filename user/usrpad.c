@@ -16,12 +16,15 @@
 
 #define PATH_SIZE 100
 
+#define UNUSED(x) ((void)x);
+
 // path to the bpf object file
 char bpf_object_path[PATH_SIZE] = "build/kerpad.bpf.o";
 
 int running = 1;
 
-void handler() {
+void handler(int signum) {
+	UNUSED(signum);
 	running = 0;
 }
 
