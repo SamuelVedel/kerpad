@@ -5,6 +5,8 @@ LDLIBS =
 OUT = build
 SRC = src
 
+KERPAD_ARGS ?=
+
 all: kerpad
 
 $(OUT)/%.bpf.o: $(BPF)/%.bpf.c
@@ -21,11 +23,14 @@ $(OUT)/main.o: $(SRC)/touchpad.h $(SRC)/util.h
 kerpad: $(OUT)/main.o $(OUT)/touchpad.o $(OUT)/mouse.o
 	$(CC) $^ -o $@ $(LDLIBS)
 
-install: kerpad
+kerpad.service: kerpad.service.template
+	cat kerpad.service.template | sed "s/<args>/$(shell echo $(KERPAD_ARGS) | sed 's/\//\\\//g')/" > kerpad.service
+
+install: kerpad kerpad.service
 	sudo cp ./kerpad /usr/bin/kerpad
 	sudo cp kerpad.service /usr/lib/systemd/system/kerpad.service
 
 clean:
 	rm -f $(OUT)/* kerpad *~ */*~
 
-.PHONY: all clean coorpad run_coorpad install
+.PHONY: all clean coorpad run_coorpad install kerpad.service
