@@ -2,21 +2,15 @@
 
 This program makes your mouse move automaticaly while touching the edge of a touchpad.
 
-To do that it uses an ebpf program that hooks a specific function of the linux kernel, and comunicates with another program in userpace. This solution is maybe overkill but it allows it to work in every situations.
+To do that, this program finds and listens to a `/dev/input/eventXX` file, and simulates a mouse for the movement.
 
 ## How to use it
 
 ### Dependencies
 
 To compile, this program depends on
- - clang
- - llvm
- - libsystemd
- - libbpf (see [https://github.com/libbpf/libbpf](https://github.com/libbpf/libbpf))
- - ecc and ecli (see [https://github.com/eunomia-bpf/eunomia-bpf](https://github.com/eunomia-bpf/eunomia-bpf))
-
-ecc and ecli program need to be in a place referenced by `$PATH` (like `/usr/bin/` for instance).
-ecli is not necessary if you dont use coorpad (see n[Configure the edge limits](#configure-the-edge-limits))
+ - gcc
+ - make
 
 ### Compile and run it
 
@@ -29,14 +23,9 @@ And run it with the command:
 sudo ./kerpad
 ```
 
-While the program is running, you can stop it by typing `CTRL-C`
+While the program is running, you can stop it by typing `CTRL-C`. When you type `CTRL-C`, you have to touch the touchpad a last time for the program to stop.
 
-If you are not in the project directory or if you have moved the `build/kerpad.bpf.o` file, you can specify the path to this file by typing:
-```
-sudo ./kerpad -b <path/to/kerpad.bpf.o>
-```
-
-If you want this program to run at the boot of you system, you can run:
+If you want this program to run at the boot of your system, you can run:
 ```
 make install
 sudo systemctl daemon-reload
@@ -44,9 +33,9 @@ sudo systemctl enable kerpad.service
 ```
 This will install and enable a systemd service for kerpad (it will also copy `kerpad` to `/usr/bin`).
 
-If you have moved `build/kerpad.bpf.o`, run
+If you want to use aditional kerpad arguments for the service, you can do:
 ```
-BPF_OBJECT=</absolute/path/to/kerpad.bpf.o> make kerpad.service
+make kerpad.service KERPAD_ARGS=<args>
 ```
 before the previous commands (you may have to remove `kerpad.service` if it already exists)
 
@@ -56,17 +45,19 @@ You can change the template for `kerpad.service` by editing `kerpad.service.temp
 
 ### Configure the edge limits
 
-The edge limits are the limits on the touchpad after which the the mouse will start to move automaticaly. Those limits are defined by macro in the `bpf/kerpad.bpf.c` program. Those limits might not be relevent for your personal touchpad so you are free to change them and recompile the code.
+The edge limits are the limits on the touchpad after which the the mouse will start to move automaticaly. There are defaults values for those limits. However, those default values might not be relevent for your personal touchpad so you can configure them with kerpad arguments. See:
+```
+./kerpad -h
+```
 
-To determine which edge limits fits the best for you, I programmed another ebpf program that print the coordinates on the touchpad while touching it. To use it, you can simply do:
+To determine which edge limits fits the best for you, you can do:
 ```
-make coorpad
-make run_coorpad
+./kerpad -d
 ```
-And then you will see the coordinates while touching the touchpad.
+This will display the coordinates on the touchpad while touching it, instead of moving the mouse.
 
 ### Configure mouse speed
 
-At the top of the `user/usrpad.c` there are two macro `SLEEP_TIME` and `CURSOR_SPEED`. While you are touching the edge of your touchpad, the mouse move `CURSOR_SPEED` pixels each `SLEEP_TIME` miliseconds (the sleep time is longer while toucher a corner).
+At the top of the `src/main.c` there are two macro `SLEEP_TIME` and `CURSOR_SPEED`. While you are touching the edge of your touchpad, the mouse move `CURSOR_SPEED` pixels each `SLEEP_TIME` miliseconds (the sleep time is longer while touching a corner).
 
 You can change those macro if you want to change the mouse speed.
