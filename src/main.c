@@ -31,7 +31,7 @@ int maxy = DEFAULT_MAXY;
 // if non null,
 // it will display coordinates
 // instead of moving the mouse
-int display = 0;
+int verbose = 0;
 
 void handler(int signum) {
 	UNUSED(signum);
@@ -95,7 +95,8 @@ void *mouse_thread(void *arg) {
 		
 		touchpad_info_t info = {};
 		touchpad_get_info(&info);
-		//printf("%d %d\n", info.x, info.y);
+		
+		if (verbose) printf("x:%d y:%d\n", info.x, info.y);
 		if (info.x < minx) edgex = -1;
 		if (info.x > maxx) edgex = 1;
 		if (info.y < miny) edgey = -1;
@@ -115,27 +116,6 @@ void *mouse_thread(void *arg) {
 	return NULL;
 }
 
-void *display_thread(void *arg) {
-	UNUSED(arg);
-	
-	pthread_mutex_lock(&running_mutex);
-	while (running) {
-		pthread_mutex_unlock(&running_mutex);
-		
-		touchpad_info_t info = {};
-		touchpad_get_info(&info);
-		printf("x:%d y:%d\n", info.x, info.y);
-		
-		if (!info.touching) touchpad_wait();
-		else  usleep(SLEEP_TIME);
-		
-		pthread_mutex_lock(&running_mutex);
-	}
-	pthread_mutex_unlock(&running_mutex);
-	
-	return NULL;
-}
-
 void print_help(int argc, char *argv[]) {
 	UNUSED(argc);
 	printf("Usage: %s [options]\n", argv[0]);
@@ -147,14 +127,14 @@ void print_help(int argc, char *argv[]) {
 	printf("        Change min y\n");
 	printf("    -Y <max_y>\n");
 	printf("        Change max y\n");
-	printf("    -d\n");
-	printf("        Display coordinates instead\n");
-	printf("        of moving the mouse\n");
+	printf("    -v\n");
+	printf("        Display coordinates while\n");
+	printf("        touching the touchpad\n");
 }
 
 int parse_args(int argc, char *argv[]) {
 	int opt;
-	while ((opt = getopt(argc, argv, "x:X:y:Y:hd")) != -1) {
+	while ((opt = getopt(argc, argv, "x:X:y:Y:vh")) != -1) {
 		switch (opt) {
 		case 'x':
 			minx = atoi(optarg);
@@ -168,8 +148,8 @@ int parse_args(int argc, char *argv[]) {
 		case 'Y':
 			maxy = atoi(optarg);
 			break;
-		case 'd':
-			display = 1;
+		case 'v':
+			verbose = 1;
 			break;
 		case 'h':
 			print_help(argc, argv);
@@ -200,9 +180,7 @@ int main(int argc, char *argv[]) {
 	pthread_t mouse_th;
 	
 	pthread_create(&touchap_th, NULL, touchpad_thread, NULL);
-	
-	if (!display) pthread_create(&mouse_th, NULL, mouse_thread, NULL);
-	else pthread_create(&mouse_th, NULL, display_thread, NULL);
+	pthread_create(&mouse_th, NULL, mouse_thread, NULL);
 	
 	pthread_join(touchap_th, NULL);
 	pthread_join(mouse_th, NULL);
