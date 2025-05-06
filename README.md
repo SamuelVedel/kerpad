@@ -39,7 +39,7 @@ This will install and enable a systemd service for kerpad (it will also copy `ke
 
 If you want to use aditional kerpad arguments for the service, you can do:
 ```
-make kerpad.service KERPAD_ARGS=<args>
+make kerpad.service KERPAD_ARGS='<args>'
 ```
 before the previous commands (you may have to remove `kerpad.service` if it already exists)
 
@@ -62,6 +62,6 @@ This will display the coordinates on the touchpad while touching it.
 
 ### Configure mouse speed
 
-At the top of the `src/main.c` there are two macro `SLEEP_TIME` and `CURSOR_SPEED`. While you are touching the edge of your touchpad, the mouse move `CURSOR_SPEED` pixels each `SLEEP_TIME` miliseconds (the sleep time is longer while touching a corner).
+At the top of the `src/main.c` there are two macro `SLEEP_TIME` and `CURSOR_SPEED`. While you are touching the edge of your touchpad, the mouse move `CURSOR_SPEED` pixels each `SLEEP_TIME` microseconds (the sleep time is longer while touching a corner).
 
 You can change those macro if you want to change the mouse speed.
