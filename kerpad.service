@@ -3,7 +3,7 @@ Description=Edge motion
 After=default.target
 
 [Service]
-ExecStart=/usr/bin/kerpad -b <bpf-object-path>
+ExecStart=/usr/bin/kerpad
 Type=exec
 Restart=always
 
