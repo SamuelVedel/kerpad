@@ -31,6 +31,6 @@ install: kerpad kerpad.service
 	sudo cp kerpad.service /usr/lib/systemd/system/kerpad.service
 
 clean:
-	rm -f $(OUT)/* kerpad *~ */*~
+	rm -f $(OUT)/* kerpad kerpad.service *~ */*~
 
-.PHONY: all clean coorpad run_coorpad install kerpad.service
+.PHONY: all clean coorpad run_coorpad install
