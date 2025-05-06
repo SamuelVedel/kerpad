@@ -17,6 +17,8 @@
 #define DEFAULT_MAXY 2300
 
 #define SLEEP_TIME 3000
+//#define CORNER_SLEEP_TIME SLEEP_TIME*1414/1000
+#define CORNER_SLEEP_TIME SLEEP_TIME*2
 #define CURSOR_SPEED 1
 
 int running = 1;
@@ -107,7 +109,7 @@ void *mouse_thread(void *arg) {
 		
 		if (!info.touching) touchpad_wait();
 		else if (!edgex || !edgey) usleep(SLEEP_TIME);
-		else usleep(SLEEP_TIME*1414/1000);
+		else usleep(CORNER_SLEEP_TIME);
 		
 		pthread_mutex_lock(&running_mutex);
 	}
