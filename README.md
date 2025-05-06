@@ -52,7 +52,7 @@ The edge limits are the limits on the touchpad after which the the mouse will st
 
 To determine which edge limits fits the best for you, you can do:
 ```
-./kerpad -d
+sudo ./kerpad -d
 ```
 This will display the coordinates on the touchpad while touching it, instead of moving the mouse.
 
