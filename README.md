@@ -4,6 +4,10 @@ This program makes your mouse move automaticaly while touching the edge of a tou
 
 To do that, this program finds and listens to a `/dev/input/eventXX` file, and simulates a mouse for the movement.
 
+This progam was made to work on linux. It might work on other unix-like operating systems, but there are no warranty.
+
+The first version of this program was using ebpf to work, this was overkill and consumed more cpu cycles. If you are curious, you can still find this version on the ebpf branch of this repo.
+
 ## How to use it
 
 ### Dependencies
