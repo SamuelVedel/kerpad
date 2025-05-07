@@ -99,6 +99,8 @@ void *mouse_thread(void *arg) {
 	pthread_mutex_lock(&running_mutex);
 	while (running) {
 		pthread_mutex_unlock(&running_mutex);
+		int edgex = 0;
+		int edgey = 0;
 		
 		touchpad_info_t info = {};
 		touchpad_get_info(&info);
@@ -106,9 +108,6 @@ void *mouse_thread(void *arg) {
 		int active = (info.pressing || info.double_touching)
 			|| (move_touched && info.touching);
 		if (active) {
-			int edgex = 0;
-			int edgey = 0;
-			
 			if (verbose) printf("x:%d y:%d\n", info.x, info.y);
 			if (info.x < minx) edgex = -1;
 			if (info.x > maxx) edgex = 1;
