@@ -29,7 +29,7 @@ sudo ./kerpad
 
 While the program is running, you can stop it by typing `CTRL-C`. When you type `CTRL-C`, you have to touch the touchpad a last time for the program to stop.
 
-By default, the edge motion only work when the touchpad is pressed, or when you doubled-touched it. But you can have edge motion by just touching the touchpad if you run:
+By default, the edge motion only work when the touchpad is pressed, or when you doubled-touched it. But you can have edge motion by just touching it if you run:
 ```
 sudo ./kerpad -a
 ```

@@ -24,7 +24,7 @@
 
 // delay max between to touch
 // to be a double touch
-#define DOUBLE_TOUCH_TIME 500
+#define DOUBLE_TOUCH_TIME 250
 
 struct input_event {
 	struct timeval time;
