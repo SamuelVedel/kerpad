@@ -26,13 +26,6 @@
 // to be a double touch
 #define DOUBLE_TOUCH_TIME 250
 
-struct input_event {
-	struct timeval time;
-	unsigned short type;
-	unsigned short code;
-	int value;
-};
-
 struct touchpad_struct {
 	int fd;
 	pthread_mutex_t mutex;
