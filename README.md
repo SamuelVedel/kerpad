@@ -4,7 +4,7 @@ This program makes your mouse move automaticaly while touching the edge of a tou
 
 To do that, this program finds and listens to a `/dev/input/eventXX` file, and simulates a mouse for the movement.
 
-This progam was made to work on linux. It might work on other unix-like operating systems, but there are no warranty.
+This progam was made to work on linux. It might work on other unix-like operating systems, but there is no warranty.
 
 The first version of this program was using ebpf to work, this was overkill and consumed more cpu cycles. If you are curious, you can still find this version on the ebpf branch of this repo.
 
@@ -29,6 +29,11 @@ sudo ./kerpad
 
 While the program is running, you can stop it by typing `CTRL-C`. When you type `CTRL-C`, you have to touch the touchpad a last time for the program to stop.
 
+By default, the edge motion only work when the touchpad is pressed, or when you doubled-touched it. But you can have edge motion by just touching the touchpad if you run:
+```
+sudo ./kerpad -a
+```
+
 If you want this program to run at the boot of your system, you can run:
 ```
 make install
@@ -45,7 +50,7 @@ before the previous commands (you may have to remove `kerpad.service` if it alre
 
 You can change the template for `kerpad.service` by editing `kerpad.service.template`
 
-## How to configurate it
+## How to configure it
 
 ### Configure the edge limits
 
@@ -56,7 +61,7 @@ The edge limits are the limits on the touchpad after which the the mouse will st
 
 To determine which edge limits fits the best for you, you can do:
 ```
-sudo ./kerpad -v
+sudo ./kerpad -va
 ```
 This will display the coordinates on the touchpad while touching it.
 

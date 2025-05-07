@@ -17,8 +17,8 @@
 #define DEFAULT_MAXY 2300
 
 #define SLEEP_TIME 3000
-//#define CORNER_SLEEP_TIME SLEEP_TIME*1414/1000
-#define CORNER_SLEEP_TIME SLEEP_TIME*2
+//#define CORNER_SLEEP_TIME (SLEEP_TIME*1414/1000)
+#define CORNER_SLEEP_TIME (SLEEP_TIME*2)
 #define CURSOR_SPEED 1
 
 int running = 1;
@@ -34,6 +34,13 @@ int maxy = DEFAULT_MAXY;
 // it will display coordinates
 // instead of moving the mouse
 int verbose = 0;
+
+// if non null,
+// edge motion will work while
+// touching the touchpad
+// else it will only work while pressing
+// or double touching it
+int move_touched = 0;
 
 void handler(int signum) {
 	UNUSED(signum);
@@ -92,22 +99,27 @@ void *mouse_thread(void *arg) {
 	pthread_mutex_lock(&running_mutex);
 	while (running) {
 		pthread_mutex_unlock(&running_mutex);
-		int edgex = 0;
-		int edgey = 0;
 		
 		touchpad_info_t info = {};
 		touchpad_get_info(&info);
 		
-		if (verbose) printf("x:%d y:%d\n", info.x, info.y);
-		if (info.x < minx) edgex = -1;
-		if (info.x > maxx) edgex = 1;
-		if (info.y < miny) edgey = -1;
-		if (info.y > maxy) edgey = 1;
+		int active = (info.pressing || info.double_touching)
+			|| (move_touched && info.touching);
+		if (active) {
+			int edgex = 0;
+			int edgey = 0;
+			
+			if (verbose) printf("x:%d y:%d\n", info.x, info.y);
+			if (info.x < minx) edgex = -1;
+			if (info.x > maxx) edgex = 1;
+			if (info.y < miny) edgey = -1;
+			if (info.y > maxy) edgey = 1;
 		
-		if (edgex) mouse_move_x(edgex*CURSOR_SPEED);
-		if (edgey) mouse_move_y(edgey*CURSOR_SPEED);
+			if (edgex) mouse_move_x(edgex*CURSOR_SPEED);
+			if (edgey) mouse_move_y(edgey*CURSOR_SPEED);
+		}
 		
-		if (!info.touching) touchpad_wait();
+		if (!active) touchpad_wait();
 		else if (!edgex || !edgey) usleep(SLEEP_TIME);
 		else usleep(CORNER_SLEEP_TIME);
 		
@@ -129,14 +141,19 @@ void print_help(int argc, char *argv[]) {
 	printf("        Change min y\n");
 	printf("    -Y <max_y>\n");
 	printf("        Change max y\n");
+	printf("    -a\n");
+	printf("        Activate edge motion even\n");
+	printf("        when the touchpad is justed touched\n");
 	printf("    -v\n");
 	printf("        Display coordinates while\n");
-	printf("        touching the touchpad\n");
+	printf("        pressing the touchpad\n");
+	printf("    -h\n");
+	printf("        Display this help and exit\n");
 }
 
 int parse_args(int argc, char *argv[]) {
 	int opt;
-	while ((opt = getopt(argc, argv, "x:X:y:Y:vh")) != -1) {
+	while ((opt = getopt(argc, argv, "x:X:y:Y:avh")) != -1) {
 		switch (opt) {
 		case 'x':
 			minx = atoi(optarg);
@@ -149,6 +166,9 @@ int parse_args(int argc, char *argv[]) {
 			break;
 		case 'Y':
 			maxy = atoi(optarg);
+			break;
+		case 'a':
+			move_touched = 1;
 			break;
 		case 'v':
 			verbose = 1;

@@ -12,12 +12,19 @@
 #include <linux/input-event-codes.h>
 #include <sys/ioctl.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 #include "touchpad.h"
 #include "util.h"
 
 #define EVENT_DIR "/dev/input/"
 #define EVENT_FILE_PREFIX "event"
+
+#define TIMEVAL_MILLI(x) (x.tv_sec*1000L+x.tv_usec/1000)
+
+// delay max between to touch
+// to be a double touch
+#define DOUBLE_TOUCH_TIME 500
 
 struct input_event {
 	struct timeval time;
@@ -30,6 +37,7 @@ struct touchpad_struct {
 	int fd;
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
+	unsigned long last_touch_time;
 	touchpad_info_t info;
 };
 
@@ -92,13 +100,37 @@ void touchpad_read_next_event() {
 	exitif(read(touch_st.fd, &event, sizeof(event)) == -1,
 		   "reading from the touchpad event file");
 	if (event.type == EV_KEY){
+		//printf("%d %d %d\n", event.type, event.code, event.value);
 		switch (event.code) {
-		case 330:
+		case 330: // touched
 			pthread_mutex_lock(&touch_st.mutex);
 			touch_st.info.touching = event.value;
-			if (touch_st.info.touching)
-				pthread_cond_signal(&touch_st.cond);
+			if (!event.value) touch_st.info.double_touching = 0;
 			pthread_mutex_unlock(&touch_st.mutex);
+			
+			// save touch time
+			// and check for double touch
+			if (event.value) {
+				struct timeval touch_timeval;
+				gettimeofday(&touch_timeval, NULL);
+				unsigned long touch_time = TIMEVAL_MILLI(touch_timeval);
+				if (touch_time-touch_st.last_touch_time < DOUBLE_TOUCH_TIME) {
+					// double touch detected
+					pthread_mutex_lock(&touch_st.mutex);
+					touch_st.info.double_touching = 1;
+					pthread_mutex_unlock(&touch_st.mutex);
+				}
+				touch_st.last_touch_time = touch_time;
+				pthread_cond_signal(&touch_st.cond);
+			}
+			break;
+		case 272: // pressed
+			pthread_mutex_lock(&touch_st.mutex);
+			touch_st.info.pressing = event.value;
+			pthread_mutex_unlock(&touch_st.mutex);
+			
+			if (event.value)
+				pthread_cond_signal(&touch_st.cond);
 			break;
 		}
 	} else if (event.type == EV_ABS) {

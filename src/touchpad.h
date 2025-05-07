@@ -5,6 +5,8 @@ struct touchpad_info {
 	int x;
 	int y;
 	int touching;
+	int pressing;
+	int double_touching;
 };
 
 typedef struct touchpad_info touchpad_info_t;
@@ -35,13 +37,13 @@ void touchpad_read_next_event();
 void touchpad_get_info(touchpad_info_t *info);
 
 /**
- * Wait for the touchpad to be touched
+ * Wait for the touchpad to be touched or pressed
  */
 void touchpad_wait();
 
 /**
  * Signal a thread waiting for the touchap
- * to be touched
+ * to be touched or pressed
  */
 void touchpad_signal();
 
