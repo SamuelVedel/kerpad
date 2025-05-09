@@ -1,6 +1,6 @@
 # Kerpad
 
-This program makes your mouse move automaticaly while touching the edge of a touchpad.
+This program implements a customizable edge motion to makes your mouse move automaticaly while touching the edge of a touchpad.
 
 To do that, this program finds and listens to a `/dev/input/eventXX` file, and simulates a mouse for the movement.
 
