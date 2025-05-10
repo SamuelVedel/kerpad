@@ -29,7 +29,7 @@ void mouse_init() {
 	usetup.id.bustype = BUS_USB;
 	usetup.id.vendor = 0x1234;
 	usetup.id.product = 0x5678;
-	strcpy(usetup.name, "kerpad mouse");
+	strcpy(usetup.name, "Kerpad Mouse");
 	ioctl(ui_fd, UI_DEV_SETUP, &usetup);
 	ioctl(ui_fd, UI_DEV_CREATE);
 	sleep(1);
