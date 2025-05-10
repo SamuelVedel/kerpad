@@ -20,7 +20,8 @@
 #define EVENT_DIR "/dev/input/"
 #define EVENT_FILE_PREFIX "event"
 
-#define TIMEVAL_MILLI(x) (x.tv_sec*1000L+x.tv_usec/1000)
+#define EVENT_TIME_MILLI(event) (event.input_event_sec*1000L \
+								 +event.input_event_usec/1000)
 
 // delay max between to touch
 // to be a double touch
@@ -104,9 +105,7 @@ void touchpad_read_next_event() {
 			// save touch time
 			// and check for double touch
 			if (event.value) {
-				struct timeval touch_timeval;
-				gettimeofday(&touch_timeval, NULL);
-				unsigned long touch_time = TIMEVAL_MILLI(touch_timeval);
+				unsigned long touch_time = EVENT_TIME_MILLI(event);
 				if (touch_time-touch_st.last_touch_time < DOUBLE_TOUCH_TIME) {
 					// double touch detected
 					pthread_mutex_lock(&touch_st.mutex);
