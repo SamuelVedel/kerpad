@@ -127,12 +127,12 @@ void touchpad_read_next_event() {
 		}
 	} else if (event.type == EV_ABS) {
 		switch (event.code) {
-		case REL_X:
+		case ABS_X:
 			pthread_mutex_lock(&touch_st.mutex);
 			touch_st.info.x = event.value;
 			pthread_mutex_unlock(&touch_st.mutex);
 			break;
-		case REL_Y:
+		case ABS_Y:
 			pthread_mutex_lock(&touch_st.mutex);
 			touch_st.info.y = event.value;
 			pthread_mutex_unlock(&touch_st.mutex);
