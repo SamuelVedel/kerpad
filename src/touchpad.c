@@ -48,10 +48,21 @@ struct touchpad_struct touch_st = {
  * a touchpad event file
  */
 int is_touchpad(int fd) {
+	unsigned long evbit[(EV_MAX+7)/8] = {};
+	unsigned long absbit[(ABS_MAX+7)/8] = {};
 	char name[256] = {};
+	
+	ioctl(fd, EVIOCGBIT(0, sizeof(evbit)), evbit);
+	ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit);
 	ioctl(fd, EVIOCGNAME(sizeof(name)), name);
 	
 	if (strstr(name, "Touchpad"))
+		return 1;
+	
+	int has_abs = evbit[EV_ABS/8]&(1<<(EV_ABS%8));
+	int has_mt_position = absbit[ABS_MT_POSITION_X/8]&(1<<(ABS_MT_POSITION_X%8));
+	int has_x_y = absbit[ABS_X/8]&(1<<(ABS_X%8)) && absbit[ABS_Y/8]&(1<<(ABS_Y%8));
+	if (has_abs && (has_mt_position || has_x_y))
 		return 1;
 	
 	return 0;
