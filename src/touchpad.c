@@ -1,5 +1,5 @@
 /*
- * This file is responsible of retrieving
+ * This file is responsible for retrieving
  * touchpad coordinates
  */
 
@@ -28,6 +28,7 @@
 #define DOUBLE_TOUCH_TIME 250
 
 struct touchpad_struct {
+	touchpad_settings_t settings;
 	int fd;
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
@@ -68,7 +69,7 @@ int is_touchpad(int fd) {
 	return 0;
 }
 
-int touchpad_init() {
+int touchpad_init(touchpad_settings_t *settings) {
 	DIR *dir = opendir(EVENT_DIR);
 	exitif(dir == NULL, "openning event directory");
 	struct dirent *de;
@@ -96,7 +97,21 @@ int touchpad_init() {
 	if (fd == -1) return -1;
 	
 	touch_st.fd = fd;
+	touch_st.settings = *settings;
 	return 0;
+}
+
+/**
+ * Return false if the touchpad coordinates are
+ * beyond the borders defined in the settings
+ */
+int dont_touch_borders() {
+	int x = touch_st.info.x;
+	int y = touch_st.info.y;
+	return x >= touch_st.settings.minx
+		&& x <= touch_st.settings.maxx
+		&& y >= touch_st.settings.miny
+		&& y <= touch_st.settings.maxy;
 }
 
 void touchpad_read_next_event() {
@@ -104,7 +119,7 @@ void touchpad_read_next_event() {
 	
 	exitif(read(touch_st.fd, &event, sizeof(event)) == -1,
 		   "reading from the touchpad event file");
-	if (event.type == EV_KEY){
+	if (event.type == EV_KEY) {
 		//printf("%d %d %d\n", event.type, event.code, event.value);
 		switch (event.code) {
 		case 330: // touched
@@ -117,7 +132,8 @@ void touchpad_read_next_event() {
 			// and check for double touch
 			if (event.value) {
 				unsigned long touch_time = EVENT_TIME_MILLI(event);
-				if (touch_time-touch_st.last_touch_time < DOUBLE_TOUCH_TIME) {
+				if (touch_time-touch_st.last_touch_time < DOUBLE_TOUCH_TIME
+					&& dont_touch_borders()) {
 					// double touch detected
 					pthread_mutex_lock(&touch_st.mutex);
 					touch_st.info.double_touching = 1;
@@ -137,6 +153,7 @@ void touchpad_read_next_event() {
 			break;
 		}
 	} else if (event.type == EV_ABS) {
+		// moved
 		switch (event.code) {
 		case ABS_X:
 			pthread_mutex_lock(&touch_st.mutex);

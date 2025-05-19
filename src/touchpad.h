@@ -8,8 +8,15 @@ struct touchpad_info {
 	int pressing;
 	int double_touching;
 };
-
 typedef struct touchpad_info touchpad_info_t;
+
+struct touchpad_settings {
+	int minx;
+	int maxx;
+	int miny;
+	int maxy;
+};
+typedef struct touchpad_settings touchpad_settings_t;
 
 /**
  * Init the needed things for touchpad
@@ -18,7 +25,7 @@ typedef struct touchpad_info touchpad_info_t;
  * Return a negative value if no touchpad
  * is found
  */
-int touchpad_init();
+int touchpad_init(touchpad_settings_t *settings);
 
 /**
  * Clean the touchpad event polling

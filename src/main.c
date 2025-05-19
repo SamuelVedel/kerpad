@@ -188,7 +188,13 @@ int main(int argc, char *argv[]) {
 	if (!parse_args(argc, argv))
 		return EXIT_FAILURE;
 	
-	if (touchpad_init() < 0) {
+	touchpad_settings_t settings = {
+		.minx = minx,
+		.maxx = maxx,
+		.miny = miny,
+		.maxy = maxy,
+	};
+	if (touchpad_init(&settings) < 0) {
 		printf("No touchap detected\n");
 		return EXIT_FAILURE;
 	}
