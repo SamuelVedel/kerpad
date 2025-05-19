@@ -195,7 +195,6 @@ int main(int argc, char *argv[]) {
 		.maxy = maxy,
 	};
 	if (touchpad_init(&settings) < 0) {
-		printf("No touchap detected\n");
 		return EXIT_FAILURE;
 	}
 	mouse_init();

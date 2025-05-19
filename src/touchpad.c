@@ -13,6 +13,7 @@
 #include <sys/ioctl.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <stdint.h>
 
 #include "touchpad.h"
 #include "util.h"
@@ -20,7 +21,7 @@
 #define EVENT_DIR "/dev/input/"
 #define EVENT_FILE_PREFIX "event"
 
-#define EVENT_TIME_MILLI(event) (event.input_event_sec*1000L \
+#define EVENT_TIME_MILLI(event) (event.input_event_sec*1000L\
 								 +event.input_event_usec/1000)
 
 // delay max between to touch
@@ -42,59 +43,95 @@ struct touchpad_struct touch_st = {
 	.cond = PTHREAD_COND_INITIALIZER
 };
 
+typedef uint8_t touchpad_resemblance_t;
+
+#define TR_HAS_NAME_IN_TOUCHPAD(tr) (tr&1)
+#define TR_HAS_ABS(tr) (tr&(1<<1))
+#define TR_HAS_XY(tr) (tr&(1<<2))
+#define TR_HAS_MT(tr) (tr&(1<<3))
+
+#define TR_SET_NAME_IN_TOUCHPAD(tr, v) if (v) tr |= 1; else tr &= ~1;
+#define TR_SET_ABS(tr, v) if (v) tr |= (1<<1); else tr &= ~(1<<1);
+#define TR_SET_XY(tr, v) if (v) tr |= (1<<2); else tr &= ~(1<<2);
+#define TR_SET_MT(tr, v) if (v) tr |= (1<<3); tr &= ~(1<<3);
+
+#define TR_GET_MARK(tr) ((TR_HAS_NAME_IN_TOUCHPAD(tr)*2\
+						  +TR_HAS_XY(tr)*2+TR_HAS_MT(tr))\
+						 *(TR_HAS_ABS(tr) && (TR_HAS_XY(tr) || TR_HAS_MT(tr))))
 
 /**
- * Return a value different from 0 if
- * this file descriptor correspond to
- * a touchpad event file
+ * Get a feedback on the file descriptor to know
+ * if it looks like a touchpad
  */
-int is_touchpad(int fd) {
-	unsigned long evbit[(EV_MAX+7)/8] = {};
-	unsigned long absbit[(ABS_MAX+7)/8] = {};
+void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
+	unsigned long evbit[(EV_CNT+7)/8] = {};
+	unsigned long absbit[(ABS_CNT+7)/8] = {};
 	char name[256] = {};
 	
-	ioctl(fd, EVIOCGBIT(0, sizeof(evbit)), evbit);
-	ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit);
-	ioctl(fd, EVIOCGNAME(sizeof(name)), name);
+	exitif(ioctl(fd, EVIOCGBIT(0, sizeof(evbit)), evbit) == -1, "ioctl evbit");
+	exitif(ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) == -1, "ioctl absbit");
+	exitif(ioctl(fd, EVIOCGNAME(sizeof(name)), name) == -1, "ioctl name");
 	
-	if (strstr(name, "Touchpad"))
-		return 1;
+	TR_SET_NAME_IN_TOUCHPAD(*tr, strstr(name, "Touchpad"));
 	
-	int has_abs = evbit[EV_ABS/8]&(1<<(EV_ABS%8));
-	int has_mt_position = absbit[ABS_MT_POSITION_X/8]&(1<<(ABS_MT_POSITION_X%8));
-	int has_x_y = absbit[ABS_X/8]&(1<<(ABS_X%8)) && absbit[ABS_Y/8]&(1<<(ABS_Y%8));
-	if (has_abs && (has_mt_position || has_x_y))
-		return 1;
-	
-	return 0;
+	TR_SET_ABS(*tr, evbit[EV_ABS/8]&(1<<(EV_ABS%8)));
+	TR_SET_MT(*tr, absbit[ABS_MT_POSITION_X/8]&(1<<(ABS_MT_POSITION_X%8)));
+	TR_SET_XY(*tr, absbit[ABS_X/8]&(1<<(ABS_X%8)) && absbit[ABS_Y/8]&(1<<(ABS_Y%8)));
 }
 
-int touchpad_init(touchpad_settings_t *settings) {
+int get_best_touchpad() {
 	DIR *dir = opendir(EVENT_DIR);
-	exitif(dir == NULL, "openning event directory");
+	exitif(dir == NULL, "openning the event directory");
 	struct dirent *de;
 	int prefix_len = strlen(EVENT_FILE_PREFIX);
 	int fd = -1;
 	
+	char best_path[255] = {};
+	touchpad_resemblance_t best_tr = 0;
+	int best_mark = 0;
+	
 	while ((de = readdir(dir))) {
-		exitif(errno != 0, "reading event directory");
+		exitif(errno != 0, "reading the event directory");
 		
 		if (strncmp(de->d_name, EVENT_FILE_PREFIX, prefix_len)) continue;
-		char path[100];
+		char path[255];
 		strcpy(path, EVENT_DIR);
 		strcat(path, de->d_name);
 		
 		fd = open(path, O_RDONLY);
 		exitif(fd == -1, "opening an event file");
 		
-		if (is_touchpad(fd)) break;
+		touchpad_resemblance_t tr = 0;
+		get_touchpad_resemblance(fd, &tr);
+		int mark = TR_GET_MARK(tr);
+		if (best_mark < mark) {
+			strcpy(best_path, path);
+			best_tr = tr;
+			best_mark = mark;
+		}
 		
 		exitif(close(fd) == -1, "closing an event file");
 		fd = -1;
 	}
-	
 	exitif(closedir(dir) == -1, "clossing the event directory");
-	if (fd == -1) return -1;
+	
+	if (best_mark == 0) {
+		fprintf(stderr, "No touchpad found\n");
+		return -1;
+	}
+	
+	if (!TR_HAS_XY(best_tr)) {
+		fprintf(stderr, "Warning: found touchpad don't support asbolute x/y events\n");
+	}
+	
+	fd = open(best_path, O_RDONLY);
+	exitif(fd == -1, "opening the found touchpad event file");
+	return fd;
+}
+
+int touchpad_init(touchpad_settings_t *settings) {
+	int fd = get_best_touchpad();
+	if (fd < 0) return -1;
 	
 	touch_st.fd = fd;
 	touch_st.settings = *settings;
