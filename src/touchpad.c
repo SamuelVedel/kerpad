@@ -43,21 +43,25 @@ struct touchpad_struct touch_st = {
 	.cond = PTHREAD_COND_INITIALIZER
 };
 
-typedef uint8_t touchpad_resemblance_t;
+struct touchpad_resemblance {
+	char name[255];
+	uint8_t flags;
+};
+typedef struct touchpad_resemblance touchpad_resemblance_t;
 
-#define TR_HAS_NAME_IN_TOUCHPAD(tr) (tr&1)
-#define TR_HAS_ABS(tr) (tr&(1<<1))
-#define TR_HAS_XY(tr) (tr&(1<<2))
-#define TR_HAS_MT(tr) (tr&(1<<3))
+#define TR_HAS_NAME_IN_TOUCHPAD(tr) ((tr).flags&1)
+#define TR_HAS_ABS(tr) ((tr).flags&(1<<1))
+#define TR_HAS_XY(tr) ((tr).flags&(1<<2))
+#define TR_HAS_MT(tr) ((tr).flags&(1<<3))
 
-#define TR_SET_NAME_IN_TOUCHPAD(tr, v) if (v) tr |= 1; else tr &= ~1;
-#define TR_SET_ABS(tr, v) if (v) tr |= (1<<1); else tr &= ~(1<<1);
-#define TR_SET_XY(tr, v) if (v) tr |= (1<<2); else tr &= ~(1<<2);
-#define TR_SET_MT(tr, v) if (v) tr |= (1<<3); tr &= ~(1<<3);
+#define TR_SET_NAME_IN_TOUCHPAD(tr, v) if (v) (tr).flags |= 1; else (tr).flags &= ~1;
+#define TR_SET_ABS(tr, v) if (v) (tr).flags |= (1<<1); else (tr).flags &= ~(1<<1);
+#define TR_SET_XY(tr, v) if (v) (tr).flags |= (1<<2); else (tr).flags &= ~(1<<2);
+#define TR_SET_MT(tr, v) if (v) (tr).flags |= (1<<3); else (tr).flags &= ~(1<<3);
 
 #define TR_GET_MARK(tr) ((TR_HAS_NAME_IN_TOUCHPAD(tr)*2\
-						  +TR_HAS_XY(tr)*2+TR_HAS_MT(tr))\
-						 *(TR_HAS_ABS(tr) && (TR_HAS_XY(tr) || TR_HAS_MT(tr))))
+						  +TR_HAS_XY(tr)*2+TR_HAS_MT(tr)\
+						  *(TR_HAS_ABS(tr) && (TR_HAS_XY(tr) || TR_HAS_MT(tr)))))
 
 /**
  * Get a feedback on the file descriptor to know
@@ -66,13 +70,12 @@ typedef uint8_t touchpad_resemblance_t;
 void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
 	unsigned long evbit[(EV_CNT+7)/8] = {};
 	unsigned long absbit[(ABS_CNT+7)/8] = {};
-	char name[256] = {};
 	
 	exitif(ioctl(fd, EVIOCGBIT(0, sizeof(evbit)), evbit) == -1, "ioctl evbit");
 	exitif(ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) == -1, "ioctl absbit");
-	exitif(ioctl(fd, EVIOCGNAME(sizeof(name)), name) == -1, "ioctl name");
+	exitif(ioctl(fd, EVIOCGNAME(sizeof(tr->name)), tr->name) == -1, "ioctl name");
 	
-	TR_SET_NAME_IN_TOUCHPAD(*tr, strstr(name, "Touchpad"));
+	TR_SET_NAME_IN_TOUCHPAD(*tr, strstr(tr->name, "Touchpad"));
 	
 	TR_SET_ABS(*tr, evbit[EV_ABS/8]&(1<<(EV_ABS%8)));
 	TR_SET_MT(*tr, absbit[ABS_MT_POSITION_X/8]&(1<<(ABS_MT_POSITION_X%8)));
@@ -87,7 +90,7 @@ int get_best_touchpad() {
 	int fd = -1;
 	
 	char best_path[255] = {};
-	touchpad_resemblance_t best_tr = 0;
+	touchpad_resemblance_t best_tr = {};
 	int best_mark = 0;
 	
 	while ((de = readdir(dir))) {
@@ -101,7 +104,7 @@ int get_best_touchpad() {
 		fd = open(path, O_RDONLY);
 		exitif(fd == -1, "opening an event file");
 		
-		touchpad_resemblance_t tr = 0;
+		touchpad_resemblance_t tr = {};
 		get_touchpad_resemblance(fd, &tr);
 		int mark = TR_GET_MARK(tr);
 		if (best_mark < mark) {
@@ -120,12 +123,17 @@ int get_best_touchpad() {
 		return -1;
 	}
 	
+	printf("Found device: %s\n", best_tr.name);
+	printf("on %s\n", best_path);
+	if (!TR_HAS_NAME_IN_TOUCHPAD(best_tr)) {
+		fprintf(stderr, "Warning: found device don't have \"Touchpad\" in it's name");
+	}
 	if (!TR_HAS_XY(best_tr)) {
-		fprintf(stderr, "Warning: found touchpad don't support asbolute x/y events\n");
+		fprintf(stderr, "Warning: found device don't support asbolute x/y events\n");
 	}
 	
 	fd = open(best_path, O_RDONLY);
-	exitif(fd == -1, "opening the found touchpad event file");
+	exitif(fd == -1, "opening the found device event file");
 	return fd;
 }
 
