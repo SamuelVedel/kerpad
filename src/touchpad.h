@@ -11,6 +11,9 @@ struct touchpad_info {
 typedef struct touchpad_info touchpad_info_t;
 
 struct touchpad_settings {
+	// if non null, it will search
+	// for a touchpad with this name
+	char *device_name;
 	int minx;
 	int maxx;
 	int miny;

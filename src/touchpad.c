@@ -60,8 +60,8 @@ typedef struct touchpad_resemblance touchpad_resemblance_t;
 #define TR_SET_MT(tr, v) if (v) (tr).flags |= (1<<3); else (tr).flags &= ~(1<<3);
 
 #define TR_GET_MARK(tr) ((TR_HAS_NAME_IN_TOUCHPAD(tr)*2\
-						  +TR_HAS_XY(tr)*2+TR_HAS_MT(tr)\
-						  *(TR_HAS_ABS(tr) && (TR_HAS_XY(tr) || TR_HAS_MT(tr)))))
+						  +TR_HAS_XY(tr)*2+TR_HAS_MT(tr))\
+						  *(TR_HAS_ABS(tr) && (TR_HAS_XY(tr) || TR_HAS_MT(tr))))
 
 /**
  * Get a feedback on the file descriptor to know
@@ -82,7 +82,16 @@ void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
 	TR_SET_XY(*tr, absbit[ABS_X/8]&(1<<(ABS_X%8)) && absbit[ABS_Y/8]&(1<<(ABS_Y%8)));
 }
 
-int get_best_touchpad() {
+/**
+ * Return a file descriptor describing the touchpad
+ * if device_name is not null, it will search for a device
+ * with this name. Otherwise it will try to found the device
+ * that look like a touchpad the most.
+ *
+ * Return the file descriptor on success, and -1 if no such device
+ * are found
+ */
+int get_touchpad(char *device_name) {
 	DIR *dir = opendir(EVENT_DIR);
 	exitif(dir == NULL, "openning the event directory");
 	struct dirent *de;
@@ -107,10 +116,16 @@ int get_best_touchpad() {
 		touchpad_resemblance_t tr = {};
 		get_touchpad_resemblance(fd, &tr);
 		int mark = TR_GET_MARK(tr);
-		if (best_mark < mark) {
+		int names_equal = device_name && !strcmp(device_name, tr.name);
+		if ((!device_name && best_mark < mark) || names_equal) {
 			strcpy(best_path, path);
 			best_tr = tr;
-			best_mark = mark;
+			best_mark = 1;
+			if (names_equal) {
+				exitif(close(fd) == -1, "closing an event file");
+				fd = -1;
+				break;
+			}
 		}
 		
 		exitif(close(fd) == -1, "closing an event file");
@@ -119,14 +134,19 @@ int get_best_touchpad() {
 	exitif(closedir(dir) == -1, "clossing the event directory");
 	
 	if (best_mark == 0) {
-		fprintf(stderr, "No touchpad found\n");
+		if (!device_name) fprintf(stderr, "No touchpad found\n");
+		else fprintf(stderr, "No device named %s found\n", device_name);
 		return -1;
 	}
 	
 	printf("Found device: %s\n", best_tr.name);
 	printf("on %s\n", best_path);
-	if (!TR_HAS_NAME_IN_TOUCHPAD(best_tr)) {
-		fprintf(stderr, "Warning: found device don't have \"Touchpad\" in it's name");
+	if (!TR_HAS_NAME_IN_TOUCHPAD(best_tr) && !device_name) {
+		fprintf(stderr, "Warning: found device don't have \"Touchpad\" in it's name\n");
+	}
+	if (!TR_HAS_ABS(best_tr)) {
+		fprintf(stderr, "Error: found device don't support absolute values events\n");
+		return -1;
 	}
 	if (!TR_HAS_XY(best_tr)) {
 		fprintf(stderr, "Warning: found device don't support asbolute x/y events\n");
@@ -138,7 +158,7 @@ int get_best_touchpad() {
 }
 
 int touchpad_init(touchpad_settings_t *settings) {
-	int fd = get_best_touchpad();
+	int fd = get_touchpad(settings->device_name);
 	if (fd < 0) return -1;
 	
 	touch_st.fd = fd;

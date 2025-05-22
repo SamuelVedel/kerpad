@@ -31,6 +31,11 @@ int maxx = DEFAULT_MAXX;
 int maxy = DEFAULT_MAXY;
 
 // if non null,
+// it will listen to a device
+// with this name
+char *device_name = NULL;
+
+// if non null,
 // it will display coordinates
 // instead of moving the mouse
 int verbose = 0;
@@ -140,6 +145,8 @@ void print_help(int argc, char *argv[]) {
 	printf("        Change min y\n");
 	printf("    -Y <max_y>\n");
 	printf("        Change max y\n");
+	printf("    -n <name>\n");
+	printf("        Specify the touchpad name\n");
 	printf("    -a\n");
 	printf("        Activate edge motion even\n");
 	printf("        when the touchpad is justed touched\n");
@@ -152,7 +159,7 @@ void print_help(int argc, char *argv[]) {
 
 int parse_args(int argc, char *argv[]) {
 	int opt;
-	while ((opt = getopt(argc, argv, "x:X:y:Y:avh")) != -1) {
+	while ((opt = getopt(argc, argv, "x:X:y:Y:n:avh")) != -1) {
 		switch (opt) {
 		case 'x':
 			minx = atoi(optarg);
@@ -165,6 +172,9 @@ int parse_args(int argc, char *argv[]) {
 			break;
 		case 'Y':
 			maxy = atoi(optarg);
+			break;
+		case 'n':
+			device_name = optarg;
 			break;
 		case 'a':
 			move_touched = 1;
@@ -189,6 +199,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	
 	touchpad_settings_t settings = {
+		.device_name = device_name,
 		.minx = minx,
 		.maxx = maxx,
 		.miny = miny,
