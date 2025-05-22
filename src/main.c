@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "touchpad.h"
 #include "mouse.h"
@@ -137,29 +138,44 @@ void *mouse_thread(void *arg) {
 void print_help(int argc, char *argv[]) {
 	UNUSED(argc);
 	printf("Usage: %s [options]\n", argv[0]);
-	printf("    -x <min_x>\n");
+	printf("    -x <min_x>, --minx=<min_x>\n");
 	printf("        Change min x\n");
-	printf("    -X <max_x>\n");
+	printf("    -X <max_x>, --maxx=<max_x>\n");
 	printf("        Change max x\n");
-	printf("    -y <min_y>\n");
+	printf("    -y <min_y>, --miny=<min_y>\n");
 	printf("        Change min y\n");
-	printf("    -Y <max_y>\n");
+	printf("    -Y <max_y>, --maxy=<max_y>\n");
 	printf("        Change max y\n");
-	printf("    -n <name>\n");
+	printf("    -n <name>, --name=<name>\n");
 	printf("        Specify the touchpad name\n");
-	printf("    -a\n");
+	printf("    -a, --always\n");
 	printf("        Activate edge motion even\n");
 	printf("        when the touchpad is justed touched\n");
-	printf("    -v\n");
+	printf("    -v, --verbose\n");
 	printf("        Display coordinates while\n");
 	printf("        pressing the touchpad\n");
-	printf("    -h\n");
+	printf("    -h, --help\n");
 	printf("        Display this help and exit\n");
 }
 
 int parse_args(int argc, char *argv[]) {
-	int opt;
-	while ((opt = getopt(argc, argv, "x:X:y:Y:n:avh")) != -1) {
+	struct option long_options[] = {
+		{"minx", required_argument, NULL, 'x'},
+		{"maxx", required_argument, NULL, 'X'},
+		
+		{"miny", required_argument, NULL, 'y'},
+		{"maxy", required_argument, NULL, 'Y'},
+		
+		{"name", required_argument, NULL, 'n'},
+		{"always", no_argument, NULL, 'a'},
+		{"verbose", no_argument, NULL, 'v'},
+		{"help", no_argument, NULL, 'h'},
+		{0, 0, 0, 0},
+	};
+	while (1) {
+		int opt = getopt_long(argc, argv, "x:X:y:Y:n:avh", long_options, NULL);
+		if (opt == -1) break;
+		
 		switch (opt) {
 		case 'x':
 			minx = atoi(optarg);
