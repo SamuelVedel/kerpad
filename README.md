@@ -1,10 +1,12 @@
 # Kerpad
 
-This program implements a customizable edge motion to makes your mouse move automaticaly while touching the edge of a touchpad.
+This program implements a customizable edge motion to makes your mouse move automaticaly while touching the edge of your touchpad.
 
 To do that, this program finds and listens to a `/dev/input/eventXX` file, and simulates a mouse for the movement.
 
 This progam was made to work on linux. It might work on other unix-like operating systems, but there is no warranty.
+
+This program does not support the mutli-touch protocol yet.
 
 The first version of this program was using ebpf to work, this was overkill and consumed more cpu cycles. If you are curious, you can still find this version on the ebpf branch of this repo.
 
@@ -29,10 +31,17 @@ sudo ./kerpad
 
 While the program is running, you can stop it by typing `CTRL-C`. When you type `CTRL-C`, you have to touch the touchpad a last time for the program to stop.
 
-By default, the edge motion only work when the touchpad is pressed, or when you doubled-touched it. But you can have edge motion by just touching it if you run:
+By default, the edge motion only works when the touchpad is pressed, or when you doubled-touched it. But you can have edge motion by just touching it if you run:
 ```
 sudo ./kerpad -a
 ```
+
+By default, this program will try to find the device that looks the most like a touchpad, but you can tell it to listen to a specific device with:
+```
+sudo ./kerpad -n <device_name>
+```
+
+### Make it run at boot-time
 
 If you want this program to run at the boot of your system, you can run:
 ```
@@ -54,12 +63,12 @@ You can change the template for `kerpad.service` by editing `kerpad.service.temp
 
 ### Configure the edge limits
 
-The edge limits are the limits on the touchpad after which the the mouse will start to move automaticaly. There are defaults values for those limits. However, those default values might not be relevent for your personal touchpad so you can configure them with kerpad arguments. See:
+The edge limits are the limits on the touchpad after which the the mouse will start to move automatically. By default, those limits are determined with the dimensions of the found device. However if you don't like the default values, you can easily change the edge thickness or directly the limit values with kerpad options. See:
 ```
 ./kerpad -h
 ```
 
-To determine which edge limits fits the best for you, you can do:
+To determine which edge limits fit the best for you, you can do:
 ```
 sudo ./kerpad -va
 ```
