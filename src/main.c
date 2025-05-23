@@ -162,6 +162,8 @@ int parse_args(int argc, char *argv[]) {
 		{"always", no_argument, NULL, 'a'},
 		{"verbose", no_argument, NULL, 'v'},
 		{"help", no_argument, NULL, 'h'},
+		
+		{"hey", optional_argument, NULL, '\n'},
 		{0, 0, 0, 0},
 	};
 	while (1) {
@@ -196,6 +198,13 @@ int parse_args(int argc, char *argv[]) {
 		case 'h':
 			print_help(argc, argv);
 			return 0;
+		case '\n':
+			printf(" o/ <(hey");
+			if (optarg) printf(" %s)\n", optarg);
+			else printf(")\n");
+			printf("/|\n");
+			printf("/ \\\n");
+			break;
 		case '?':
 			print_help(argc, argv);
 			return 0;
