@@ -21,7 +21,7 @@
 #define EVENT_DIR "/dev/input/"
 #define EVENT_FILE_PREFIX "event"
 
-#define DEFAULT_EDGE_THICKNESS 100
+#define DEFAULT_EDGE_THICKNESS 250
 
 #define EVENT_TIME_MILLI(event) (event.input_event_sec*1000L\
 								 +event.input_event_usec/1000)
