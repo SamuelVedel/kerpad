@@ -11,12 +11,6 @@
 
 #define UNUSED(x) ((void)x);
 
-#define DEFAULT_MINX 100
-#define DEFAULT_MINY 100
-
-#define DEFAULT_MAXX 3100
-#define DEFAULT_MAXY 2300
-
 #define SLEEP_TIME 3000
 //#define CORNER_SLEEP_TIME (SLEEP_TIME*1414/1000)
 #define CORNER_SLEEP_TIME (SLEEP_TIME*2)
@@ -25,11 +19,13 @@
 int running = 1;
 pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int minx = DEFAULT_MINX;
-int miny = DEFAULT_MINY;
+int minx = -1;
+int miny = -1;
 
-int maxx = DEFAULT_MAXX;
-int maxy = DEFAULT_MAXY;
+int maxx = -1;
+int maxy = -1;
+
+int edge_thickness = -1;
 
 // if non null,
 // it will listen to a device
@@ -105,9 +101,6 @@ void *mouse_thread(void *arg) {
 	pthread_mutex_lock(&running_mutex);
 	while (running) {
 		pthread_mutex_unlock(&running_mutex);
-		int edgex = 0;
-		int edgey = 0;
-		
 		touchpad_info_t info = {};
 		touchpad_get_info(&info);
 		
@@ -115,17 +108,12 @@ void *mouse_thread(void *arg) {
 			|| (move_touched && info.touching);
 		if (active) {
 			if (verbose) printf("x:%d y:%d\n", info.x, info.y);
-			if (info.x < minx) edgex = -1;
-			if (info.x > maxx) edgex = 1;
-			if (info.y < miny) edgey = -1;
-			if (info.y > maxy) edgey = 1;
-		
-			if (edgex) mouse_move_x(edgex*CURSOR_SPEED);
-			if (edgey) mouse_move_y(edgey*CURSOR_SPEED);
+			if (info.edgex) mouse_move_x(info.edgex*CURSOR_SPEED);
+			if (info.edgey) mouse_move_y(info.edgey*CURSOR_SPEED);
 		}
 		
 		if (!active) touchpad_wait();
-		else if (!edgex || !edgey) usleep(SLEEP_TIME);
+		else if (!info.edgex || !info.edgey) usleep(SLEEP_TIME);
 		else usleep(CORNER_SLEEP_TIME);
 		
 		pthread_mutex_lock(&running_mutex);
@@ -138,6 +126,8 @@ void *mouse_thread(void *arg) {
 void print_help(int argc, char *argv[]) {
 	UNUSED(argc);
 	printf("Usage: %s [options]\n", argv[0]);
+	printf("    -t <edge_thickness>, --thickness=<edge_thickness>\n");
+	printf("        Change the edge thickness\n");
 	printf("    -x <min_x>, --minx=<min_x>\n");
 	printf("        Change min x\n");
 	printf("    -X <max_x>, --maxx=<max_x>\n");
@@ -160,6 +150,8 @@ void print_help(int argc, char *argv[]) {
 
 int parse_args(int argc, char *argv[]) {
 	struct option long_options[] = {
+		{"thickness", required_argument, NULL, 't'},
+		
 		{"minx", required_argument, NULL, 'x'},
 		{"maxx", required_argument, NULL, 'X'},
 		
@@ -173,10 +165,13 @@ int parse_args(int argc, char *argv[]) {
 		{0, 0, 0, 0},
 	};
 	while (1) {
-		int opt = getopt_long(argc, argv, "x:X:y:Y:n:avh", long_options, NULL);
+		int opt = getopt_long(argc, argv, "t:x:X:y:Y:n:avh", long_options, NULL);
 		if (opt == -1) break;
 		
 		switch (opt) {
+		case 't':
+			edge_thickness = atoi(optarg);
+			break;
 		case 'x':
 			minx = atoi(optarg);
 			break;
@@ -220,6 +215,7 @@ int main(int argc, char *argv[]) {
 		.maxx = maxx,
 		.miny = miny,
 		.maxy = maxy,
+		.edge_thickness = edge_thickness
 	};
 	if (touchpad_init(&settings) < 0) {
 		return EXIT_FAILURE;

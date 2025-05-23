@@ -21,6 +21,8 @@
 #define EVENT_DIR "/dev/input/"
 #define EVENT_FILE_PREFIX "event"
 
+#define DEFAULT_EDGE_THICKNESS 100
+
 #define EVENT_TIME_MILLI(event) (event.input_event_sec*1000L\
 								 +event.input_event_usec/1000)
 
@@ -157,12 +159,27 @@ int get_touchpad(char *device_name) {
 	return fd;
 }
 
+void init_edge_limits() {
+	struct input_absinfo xlimits = {};
+	exitif(ioctl(touch_st.fd, EVIOCGABS(ABS_X), &xlimits) == -1, "ioctl get x limits");
+	struct input_absinfo ylimits = {};
+	exitif(ioctl(touch_st.fd, EVIOCGABS(ABS_Y), &ylimits) == -1, "ioctl get y limits");
+	
+	touchpad_settings_t *ts = &touch_st.settings;
+	if (ts->edge_thickness < 0) ts->edge_thickness = DEFAULT_EDGE_THICKNESS;
+	if (ts->minx < 0) ts->minx = xlimits.minimum+ts->edge_thickness;
+	if (ts->maxx < 0) ts->maxx = xlimits.maximum-ts->edge_thickness;
+	if (ts->miny < 0) ts->miny = ylimits.minimum+ts->edge_thickness;
+	if (ts->maxy < 0) ts->maxy = ylimits.maximum-ts->edge_thickness;
+}
+
 int touchpad_init(touchpad_settings_t *settings) {
 	int fd = get_touchpad(settings->device_name);
 	if (fd < 0) return -1;
 	
 	touch_st.fd = fd;
 	touch_st.settings = *settings;
+	init_edge_limits();
 	return 0;
 }
 
@@ -223,11 +240,21 @@ void touchpad_read_next_event() {
 		case ABS_X:
 			pthread_mutex_lock(&touch_st.mutex);
 			touch_st.info.x = event.value;
+			if (event.value <= touch_st.settings.minx)
+				touch_st.info.edgex = -1;
+			else if (event.value >= touch_st.settings.maxx)
+				touch_st.info.edgex = 1;
+			else touch_st.info.edgex = 0;
 			pthread_mutex_unlock(&touch_st.mutex);
 			break;
 		case ABS_Y:
 			pthread_mutex_lock(&touch_st.mutex);
 			touch_st.info.y = event.value;
+			if (event.value <= touch_st.settings.miny)
+				touch_st.info.edgey = -1;
+			else if (event.value >= touch_st.settings.maxy)
+				touch_st.info.edgey = 1;
+			else touch_st.info.edgey = 0;
 			pthread_mutex_unlock(&touch_st.mutex);
 			break;
 		}
