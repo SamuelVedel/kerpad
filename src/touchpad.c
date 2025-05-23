@@ -151,7 +151,10 @@ int get_touchpad(char *device_name) {
 		return -1;
 	}
 	if (!TR_HAS_XY(best_tr)) {
-		fprintf(stderr, "Warning: found device don't support asbolute x/y events\n");
+		fprintf(stderr, "Error: found device don't support asbolute x/y events\n");
+		if (TR_HAS_MT(best_tr))
+			fprintf(stderr, "This program does not support multi-touch protocol yet\n");
+		return -1;
 	}
 	
 	fd = open(best_path, O_RDONLY);
