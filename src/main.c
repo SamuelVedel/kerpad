@@ -160,12 +160,14 @@ static void print_option(struct option opt, char short_opt, char *arg_name,
 	char short_arg_str[255] = {};
 	char long_arg_str[255] = {};
 	if (opt.has_arg != no_argument) {
-		sprintf(short_arg_str, "%s <%s>%s",
+		sprintf(short_arg_str, " %s<%s>%s",
 				opt.has_arg == optional_argument? "[": "",
 				arg_name,
 				opt.has_arg == optional_argument? "]": "");
-		strcpy(long_arg_str, short_arg_str);
-		*strchr(long_arg_str, ' ') = '=';
+		sprintf(long_arg_str, "%s=<%s>%s",
+				opt.has_arg == optional_argument? "[": "",
+				arg_name,
+				opt.has_arg == optional_argument? "]": "");
 	}
 	
 	printf("    ");
