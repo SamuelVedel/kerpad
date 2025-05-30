@@ -9,9 +9,6 @@ KERPAD_ARGS ?=
 
 all: kerpad
 
-$(OUT)/%.bpf.o: $(BPF)/%.bpf.c
-	ecc $< -o $(OUT) -n
-
 $(OUT)/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
