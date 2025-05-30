@@ -36,7 +36,7 @@ void mouse_init() {
 }
 
 
-void mouse_emit(int type, int code, int val) {
+static void mouse_emit(int type, int code, int val) {
 	struct input_event ie = {
 		.type = type,
 		.code = code,

@@ -39,7 +39,7 @@ struct touchpad_struct {
 	touchpad_info_t info;
 };
 
-struct touchpad_struct touch_st = {
+static struct touchpad_struct touch_st = {
 	.fd = -1,
 	.mutex = PTHREAD_MUTEX_INITIALIZER,
 	.cond = PTHREAD_COND_INITIALIZER
@@ -69,7 +69,7 @@ typedef struct touchpad_resemblance touchpad_resemblance_t;
  * Get a feedback on the file descriptor to know
  * if it looks like a touchpad
  */
-void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
+static void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
 	unsigned long evbit[(EV_CNT+7)/8] = {};
 	unsigned long absbit[(ABS_CNT+7)/8] = {};
 	
@@ -93,7 +93,7 @@ void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
  * Return the file descriptor on success, and -1 if no such device
  * are found
  */
-int get_touchpad(char *device_name) {
+static int get_touchpad(char *device_name) {
 	DIR *dir = opendir(EVENT_DIR);
 	exitif(dir == NULL, "openning the event directory");
 	struct dirent *de;
@@ -162,7 +162,7 @@ int get_touchpad(char *device_name) {
 	return fd;
 }
 
-void init_edge_limits() {
+static void init_edge_limits() {
 	struct input_absinfo xlimits = {};
 	exitif(ioctl(touch_st.fd, EVIOCGABS(ABS_X), &xlimits) == -1, "ioctl get x limits");
 	struct input_absinfo ylimits = {};
@@ -190,7 +190,7 @@ int touchpad_init(touchpad_settings_t *settings) {
  * Return false if the touchpad coordinates are
  * beyond the borders defined in the settings
  */
-int dont_touch_borders() {
+static int dont_touch_borders() {
 	int x = touch_st.info.x;
 	int y = touch_st.info.y;
 	return x >= touch_st.settings.minx

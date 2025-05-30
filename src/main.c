@@ -16,42 +16,43 @@
 #define CORNER_SLEEP_TIME (SLEEP_TIME*2)
 #define CURSOR_SPEED 1
 
-int running = 1;
-pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int minx = -1;
-int miny = -1;
+static int running = 1;
+static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int maxx = -1;
-int maxy = -1;
+static int minx = -1;
+static int miny = -1;
 
-int edge_thickness = -1;
+static int maxx = -1;
+static int maxy = -1;
+
+static int edge_thickness = -1;
 
 // if non null,
 // it will listen to a device
 // with this name
-char *device_name = NULL;
+static char *device_name = NULL;
 
 // if non null,
 // it will display coordinates
 // instead of moving the mouse
-int verbose = 0;
+static int verbose = 0;
 
 // if non null,
 // edge motion will work while
 // touching the touchpad
 // else it will only work while pressing
 // or double touching it
-int move_touched = 0;
+static int move_touched = 0;
 
-void handler(int signum) {
+static void handler(int signum) {
 	UNUSED(signum);
 	pthread_mutex_lock(&running_mutex);
 	running = 0;
 	pthread_mutex_unlock(&running_mutex);
 }
 
-void block_sigint() {
+static void block_sigint() {
 	sigset_t set;
 	sigemptyset(&set);
 	sigaddset(&set, SIGINT);
@@ -59,7 +60,7 @@ void block_sigint() {
 			"error while blocking SIGINT");
 }
 
-void unblock_sigint() {
+static void unblock_sigint() {
 	sigset_t set;
 	sigemptyset(&set);
 	sigaddset(&set, SIGINT);
@@ -67,7 +68,7 @@ void unblock_sigint() {
 			"error while unblocking SIGINT");
 }
 
-void init_sighanlder() {
+static void init_sighanlder() {
 	struct sigaction old_sig;
 	struct sigaction new_sig = {
 		.sa_handler = handler,
@@ -79,7 +80,7 @@ void init_sighanlder() {
 			"error on sigaction");
 }
 
-void *touchpad_thread(void *arg) {
+static void *touchpad_thread(void *arg) {
 	UNUSED(arg);
 	
 	pthread_mutex_lock(&running_mutex);
@@ -95,7 +96,7 @@ void *touchpad_thread(void *arg) {
 	return NULL;
 }
 
-void *mouse_thread(void *arg) {
+static void *mouse_thread(void *arg) {
 	UNUSED(arg);
 	
 	pthread_mutex_lock(&running_mutex);
@@ -123,7 +124,7 @@ void *mouse_thread(void *arg) {
 	return NULL;
 }
 
-void print_help(int argc, char *argv[]) {
+static void print_help(int argc, char *argv[]) {
 	UNUSED(argc);
 	printf("Usage: %s [options]\n", argv[0]);
 	printf("    -t <edge_thickness>, --thickness=<edge_thickness>\n");
@@ -148,7 +149,7 @@ void print_help(int argc, char *argv[]) {
 	printf("        Display this help and exit\n");
 }
 
-int parse_args(int argc, char *argv[]) {
+static int parse_args(int argc, char *argv[]) {
 	struct option long_options[] = {
 		{"thickness", required_argument, NULL, 't'},
 		
