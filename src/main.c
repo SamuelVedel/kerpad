@@ -146,6 +146,42 @@ static void *mouse_thread(void *arg) {
 }
 
 /**
+ * Return the size of the first word in the str
+ */
+static int word_len(const char *str) {
+	int len = 0;
+	while (*str != ' ' && *str != 0) {
+		++len;
+		++str;
+	}
+	return len;
+}
+
+/**
+ * Print the given text in an area starting at offset,
+ * and of length len
+ */
+static void print_test_area(int offset, int len, const char *text) {
+	for (int i = 0; i < offset; ++i) printf(" ");
+	int line_len = 0;
+	while (*text != 0) {
+		int wlen = word_len(text);
+		if (line_len+wlen > len && line_len > 0) {
+			printf("\n");
+			for (int i = 0; i < offset; ++i) printf(" ");
+			line_len = 0;
+			continue;
+		}
+		fwrite(text, 1, wlen, stdout);
+		printf(" ");
+		text += wlen;
+		line_len += wlen;
+		while (*text == ' ') ++text;
+	}
+	printf("\n");
+}
+
+/**
  * Print an help for the option
  *
  * opt: the option to structure
@@ -155,8 +191,8 @@ static void *mouse_thread(void *arg) {
  * color: if the print option use ANSI escape or not
  * description: the option description
  */
-static void print_option(struct option opt, char short_opt, char *arg_name,
-						 int color, char *description) {
+static void print_option(struct option opt, char short_opt, const char *arg_name,
+						 int color, const char *description) {
 	char short_arg_str[255] = {};
 	char long_arg_str[255] = {};
 	if (opt.has_arg != no_argument) {
@@ -178,7 +214,7 @@ static void print_option(struct option opt, char short_opt, char *arg_name,
 	printf("%s--%s%s%s\n",
 		   color? WHITE_BOLD: "", opt.name, color? WHITE: "",
 		   long_arg_str);
-	printf("%s\n", description);
+	print_test_area(8, 30, description);
 }
 
 static void print_help(int argc, char *argv[]) {
@@ -186,25 +222,25 @@ static void print_help(int argc, char *argv[]) {
 	int color = isatty(STDOUT_FILENO);
 	printf("Usage: %s [options]\n", argv[0]);
 	print_option(long_options[0], 't', "edge_thickness", color,
-				 "        Change the edge thickness");
+				 "Change the edge thickness");
 	print_option(long_options[1], 'x', "min_x", color,
-				 "        Change min x");
+				 "Change min x");
 	print_option(long_options[2], 'X', "max_x", color,
-				 "        Change max x");
+				 "Change max x");
 	print_option(long_options[3], 'y', "min_y", color,
-				 "        Change min y");
+				 "Change min y");
 	print_option(long_options[4], 'Y', "max_y", color,
-				 "        Change max y");
+				 "Change max y");
 	print_option(long_options[5], 'n', "name", color,
-				 "        Specify the touchpad name");
+				 "Specify the touchpad name");
 	print_option(long_options[6], 'a', NULL, color,
-				 "        Activate edge motion even\n"
-				 "        when the touchpad is justed touched");
+				 "Activate edge motion even "
+				 "when the touchpad is justed touched");
 	print_option(long_options[7], 'v', NULL, color,
-				 "        Display coordinates while\n"
-				 "        pressing the touchpad");
+				 "Display coordinates while "
+				 "pressing the touchpad");
 	print_option(long_options[8], 'h', NULL, color,
-				 "        Display this help and exit");
+				 "Display this help and exit");
 }
 
 static int parse_args(int argc, char *argv[]) {
