@@ -16,6 +16,9 @@
 #define CORNER_SLEEP_TIME (SLEEP_TIME*2)
 #define CURSOR_SPEED 1
 
+// ANSI escapes
+#define WHITE        "\e[00m"
+#define WHITE_BOLD   "\e[00;01m"
 
 static int running = 1;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -44,6 +47,24 @@ static int verbose = 0;
 // else it will only work while pressing
 // or double touching it
 static int move_touched = 0;
+
+static struct option long_options[] = {
+	{"thickness", required_argument, NULL, 't'},
+	
+	{"minx", required_argument, NULL, 'x'},
+	{"maxx", required_argument, NULL, 'X'},
+	
+	{"miny", required_argument, NULL, 'y'},
+	{"maxy", required_argument, NULL, 'Y'},
+	
+	{"name", required_argument, NULL, 'n'},
+	{"always", no_argument, NULL, 'a'},
+	{"verbose", no_argument, NULL, 'v'},
+	{"help", no_argument, NULL, 'h'},
+	
+	{"hey", optional_argument, NULL, '\n'},
+	{0, 0, 0, 0},
+};
 
 static void handler(int signum) {
 	UNUSED(signum);
@@ -124,49 +145,67 @@ static void *mouse_thread(void *arg) {
 	return NULL;
 }
 
+/**
+ * Print an help for the option
+ *
+ * opt: the option to structure
+ * short_opt: the char of the short version
+ *            (or 0 if this option does not have a short version)
+ * arg_name: the argument name, can be NULL if has_arg == no_argument
+ * color: if the print option use ANSI escape or not
+ * description: the option description
+ */
+static void print_option(struct option opt, char short_opt, char *arg_name,
+						 int color, char *description) {
+	char short_arg_str[255] = {};
+	char long_arg_str[255] = {};
+	if (opt.has_arg != no_argument) {
+		sprintf(short_arg_str, "%s <%s>%s",
+				opt.has_arg == optional_argument? "[": "",
+				arg_name,
+				opt.has_arg == optional_argument? "]": "");
+		strcpy(long_arg_str, short_arg_str);
+		*strchr(long_arg_str, ' ') = '=';
+	}
+	
+	printf("    ");
+	if (short_opt)
+		printf("%s-%c%s%s, ",
+			   color? WHITE_BOLD: "", short_opt, color? WHITE: "",
+			   short_arg_str);
+	printf("%s--%s%s%s\n",
+		   color? WHITE_BOLD: "", opt.name, color? WHITE: "",
+		   long_arg_str);
+	printf("%s\n", description);
+}
+
 static void print_help(int argc, char *argv[]) {
 	UNUSED(argc);
+	int color = isatty(STDOUT_FILENO);
 	printf("Usage: %s [options]\n", argv[0]);
-	printf("    -t <edge_thickness>, --thickness=<edge_thickness>\n");
-	printf("        Change the edge thickness\n");
-	printf("    -x <min_x>, --minx=<min_x>\n");
-	printf("        Change min x\n");
-	printf("    -X <max_x>, --maxx=<max_x>\n");
-	printf("        Change max x\n");
-	printf("    -y <min_y>, --miny=<min_y>\n");
-	printf("        Change min y\n");
-	printf("    -Y <max_y>, --maxy=<max_y>\n");
-	printf("        Change max y\n");
-	printf("    -n <name>, --name=<name>\n");
-	printf("        Specify the touchpad name\n");
-	printf("    -a, --always\n");
-	printf("        Activate edge motion even\n");
-	printf("        when the touchpad is justed touched\n");
-	printf("    -v, --verbose\n");
-	printf("        Display coordinates while\n");
-	printf("        pressing the touchpad\n");
-	printf("    -h, --help\n");
-	printf("        Display this help and exit\n");
+	print_option(long_options[0], 't', "edge_thickness", color,
+				 "        Change the edge thickness");
+	print_option(long_options[1], 'x', "min_x", color,
+				 "        Change min x");
+	print_option(long_options[2], 'X', "max_x", color,
+				 "        Change max x");
+	print_option(long_options[3], 'y', "min_y", color,
+				 "        Change min y");
+	print_option(long_options[4], 'Y', "max_y", color,
+				 "        Change max y");
+	print_option(long_options[5], 'n', "name", color,
+				 "        Specify the touchpad name");
+	print_option(long_options[6], 'a', NULL, color,
+				 "        Activate edge motion even\n"
+				 "        when the touchpad is justed touched");
+	print_option(long_options[7], 'v', NULL, color,
+				 "        Display coordinates while\n"
+				 "        pressing the touchpad");
+	print_option(long_options[8], 'h', NULL, color,
+				 "        Display this help and exit");
 }
 
 static int parse_args(int argc, char *argv[]) {
-	struct option long_options[] = {
-		{"thickness", required_argument, NULL, 't'},
-		
-		{"minx", required_argument, NULL, 'x'},
-		{"maxx", required_argument, NULL, 'X'},
-		
-		{"miny", required_argument, NULL, 'y'},
-		{"maxy", required_argument, NULL, 'Y'},
-		
-		{"name", required_argument, NULL, 'n'},
-		{"always", no_argument, NULL, 'a'},
-		{"verbose", no_argument, NULL, 'v'},
-		{"help", no_argument, NULL, 'h'},
-		
-		{"hey", optional_argument, NULL, '\n'},
-		{0, 0, 0, 0},
-	};
 	while (1) {
 		int opt = getopt_long(argc, argv, "t:x:X:y:Y:n:avh", long_options, NULL);
 		if (opt == -1) break;
