@@ -1,6 +1,8 @@
 #ifndef __TOUCHPAD_H__
 #define __TOUCHPAD_H__
 
+#define DEFAULT_EDGE_THICKNESS 250
+
 struct touchpad_info {
 	int x;
 	int y;

@@ -20,6 +20,12 @@
 #define WHITE        "\e[00m"
 #define WHITE_BOLD   "\e[00;01m"
 
+#define TO_STR(x) #x
+#define MACRO_TO_STR(x) TO_STR(x)
+
+#define EXPLANATION_AREA_LEN 50
+#define OPT_DESCRIPTION_AREA_LEN 30
+
 static int running = 1;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -161,7 +167,7 @@ static int word_len(const char *str) {
  * Print the given text in an area starting at offset,
  * and of length len
  */
-static void print_test_area(int offset, int len, const char *text) {
+static void print_text_area(int offset, int len, const char *text) {
 	for (int i = 0; i < offset; ++i) printf(" ");
 	int line_len = 0;
 	while (*text != 0) {
@@ -187,23 +193,23 @@ static void print_test_area(int offset, int len, const char *text) {
  * opt: the option to structure
  * short_opt: the char of the short version
  *            (or 0 if this option does not have a short version)
- * arg_name: the argument name, can be NULL if has_arg == no_argument
+ * arg_name: the argument name, can be NULL if opt->has_arg == no_argument
  * color: if the print option use ANSI escape or not
  * description: the option description
  */
-static void print_option(struct option opt, char short_opt, const char *arg_name,
+static void print_option(const struct option *opt, char short_opt, const char *arg_name,
 						 int color, const char *description) {
 	char short_arg_str[255] = {};
 	char long_arg_str[255] = {};
-	if (opt.has_arg != no_argument) {
+	if (opt->has_arg != no_argument) {
 		sprintf(short_arg_str, " %s<%s>%s",
-				opt.has_arg == optional_argument? "[": "",
+				opt->has_arg == optional_argument? "[": "",
 				arg_name,
-				opt.has_arg == optional_argument? "]": "");
+				opt->has_arg == optional_argument? "]": "");
 		sprintf(long_arg_str, "%s=<%s>%s",
-				opt.has_arg == optional_argument? "[": "",
+				opt->has_arg == optional_argument? "[": "",
 				arg_name,
-				opt.has_arg == optional_argument? "]": "");
+				opt->has_arg == optional_argument? "]": "");
 	}
 	
 	printf("    ");
@@ -212,35 +218,68 @@ static void print_option(struct option opt, char short_opt, const char *arg_name
 			   color? WHITE_BOLD: "", short_opt, color? WHITE: "",
 			   short_arg_str);
 	printf("%s--%s%s%s\n",
-		   color? WHITE_BOLD: "", opt.name, color? WHITE: "",
+		   color? WHITE_BOLD: "", opt->name, color? WHITE: "",
 		   long_arg_str);
-	print_test_area(8, 30, description);
+	print_text_area(8, OPT_DESCRIPTION_AREA_LEN, description);
 }
 
 static void print_help(int argc, char *argv[]) {
 	UNUSED(argc);
 	int color = isatty(STDOUT_FILENO);
 	printf("Usage: %s [options]\n", argv[0]);
-	print_option(long_options[0], 't', "edge_thickness", color,
+	print_option(long_options+0, 't', "edge_thickness", color,
 				 "Change the edge thickness");
-	print_option(long_options[1], 'x', "min_x", color,
-				 "Change min x");
-	print_option(long_options[2], 'X', "max_x", color,
-				 "Change max x");
-	print_option(long_options[3], 'y', "min_y", color,
-				 "Change min y");
-	print_option(long_options[4], 'Y', "max_y", color,
-				 "Change max y");
-	print_option(long_options[5], 'n', "name", color,
+	print_option(long_options+1, 'x', "min_x", color,
+				 "Change min_x");
+	print_option(long_options+2, 'X', "max_x", color,
+				 "Change max_x");
+	print_option(long_options+3, 'y', "min_y", color,
+				 "Change min_y");
+	print_option(long_options+4, 'Y', "max_y", color,
+				 "Change max_y");
+	print_option(long_options+5, 'n', "name", color,
 				 "Specify the touchpad name");
-	print_option(long_options[6], 'a', NULL, color,
+	print_option(long_options+6, 'a', NULL, color,
 				 "Activate edge motion even "
 				 "when the touchpad is justed touched");
-	print_option(long_options[7], 'v', NULL, color,
+	print_option(long_options+7, 'v', NULL, color,
 				 "Display coordinates while "
 				 "pressing the touchpad");
-	print_option(long_options[8], 'h', NULL, color,
+	print_option(long_options+8, 'h', NULL, color,
 				 "Display this help and exit");
+	
+	printf("\n");
+	print_text_area(0, EXPLANATION_AREA_LEN,
+					"This program implements a customizable edge motion "
+					"to make your mouse move automatically while touching the "
+					"edge of your touchpad.\n");
+	printf("┌───────────────────────────────────┐\n");
+	printf("│   min_x     thickness     max_x   │\n");
+	printf("│min_y──────────────────────────┐   │\n");
+	printf("│   │                           │   │\n");
+	printf("│   │                           │   │\n");
+	printf("│   │                           │   │\n");
+	printf("│   │         touchpad          │   │\n");
+	printf("│   │                           │   │\n");
+	printf("│   │                           │   │\n");
+	printf("│   │                           │   │\n");
+	printf("│max_y──────────────────────────┘   │\n");
+	printf("│                                   │\n");
+	printf("└───────────────────────────────────┘\n");
+	
+	print_text_area(0, EXPLANATION_AREA_LEN,
+					"The above drawing represents you touchpad. "
+					"When your touchpad is pressed (or double-tapped), "
+					"if your finger is between the two square (at "
+					"the edge of the touchpad), then this program "
+					"will make the mouse "
+					"move automatically. By default, the edge limits "
+					"are defined automatically in relation to your "
+					"touchpad size and a default thickness (="
+					MACRO_TO_STR(DEFAULT_EDGE_THICKNESS)"). "
+					"If you don't like the default limits, you can use "
+					"options to change the thickness or directly the limit "
+					"values.");
 }
 
 static int parse_args(int argc, char *argv[]) {
