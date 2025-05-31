@@ -27,7 +27,7 @@
 #define EXPLANATION_AREA_LEN 50
 #define OPT_DESCRIPTION_AREA_LEN 30
 
-static int running = 1;
+static bool running = true;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int minx = -1;
@@ -45,14 +45,14 @@ static char *device_name = NULL;
 
 // if non null,
 // it will display coordinates
-static int verbose = 0;
+static bool verbose = false;
 
 // if non null,
 // edge motion will work while
 // touching the touchpad
 // else it will only work while pressing
 // or double touching it
-static int move_touched = 0;
+static bool move_touched = false;
 
 static struct option long_options[] = {
 	{"thickness", required_argument, NULL, 't'},
@@ -75,7 +75,7 @@ static struct option long_options[] = {
 static void handler(int signum) {
 	UNUSED(signum);
 	pthread_mutex_lock(&running_mutex);
-	running = 0;
+	running = false;
 	pthread_mutex_unlock(&running_mutex);
 }
 
@@ -132,7 +132,7 @@ static void *mouse_thread(void *arg) {
 		touchpad_info_t info = {};
 		touchpad_get_info(&info);
 		
-		int active = (info.pressing || info.double_touching)
+		bool active = (info.pressing || info.double_touching)
 			|| (move_touched && info.touching);
 		if (active) {
 			if (verbose) printf("x:%d y:%d\n", info.x, info.y);
@@ -198,7 +198,7 @@ static void print_text_area(int offset, int len, const char *text) {
  * description: the option description
  */
 static void print_option(const struct option *opt, char short_opt, const char *arg_name,
-						 int color, const char *description) {
+						 bool color, const char *description) {
 	char short_arg_str[255] = {};
 	char long_arg_str[255] = {};
 	if (opt->has_arg != no_argument) {
@@ -225,7 +225,7 @@ static void print_option(const struct option *opt, char short_opt, const char *a
 
 static void print_help(int argc, char *argv[]) {
 	UNUSED(argc);
-	int color = isatty(STDOUT_FILENO);
+	bool color = isatty(STDOUT_FILENO);
 	printf("Usage: %s [options]\n", argv[0]);
 	print_option(long_options+0, 't', "edge_thickness", color,
 				 "Change the edge thickness");

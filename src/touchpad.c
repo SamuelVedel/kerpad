@@ -117,7 +117,7 @@ static int get_touchpad(char *device_name) {
 		touchpad_resemblance_t tr = {};
 		get_touchpad_resemblance(fd, &tr);
 		int mark = TR_GET_MARK(tr);
-		int names_equal = device_name && !strcmp(device_name, tr.name);
+		bool names_equal = device_name && !strcmp(device_name, tr.name);
 		if ((!device_name && best_mark < mark) || names_equal) {
 			strcpy(best_path, path);
 			best_tr = tr;

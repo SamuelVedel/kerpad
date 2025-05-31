@@ -8,7 +8,7 @@
 
 #define PROG_NAME "kerpad"
 
-void exitif(int condition, const char *prefix, ...) {
+void exitif(bool condition, const char *prefix, ...) {
 	if (condition) {
 		char format_prefix[255] = PROG_NAME": ";
 		va_list argptr;
