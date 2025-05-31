@@ -16,8 +16,9 @@ $(OUT)/%.o: $(SRC)/%.c
 $(OUT)/touchpad.o: $(SRC)/touchpad.h $(SRC)/util.h
 $(OUT)/mouse.o: $(SRC)/touchpad.h $(SRC)/util.h
 $(OUT)/main.o: $(SRC)/touchpad.h $(SRC)/util.h
+$(OUT)/util.o: $(SRC)/util.h
 
-kerpad: $(OUT)/main.o $(OUT)/touchpad.o $(OUT)/mouse.o
+kerpad: $(OUT)/main.o $(OUT)/touchpad.o $(OUT)/mouse.o $(OUT)/util.o
 	$(CC) $^ -o $@ $(LDLIBS)
 
 kerpad.service: kerpad.service.template

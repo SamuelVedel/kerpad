@@ -16,7 +16,7 @@ int ui_fd = -1;
 
 void mouse_init() {
 	ui_fd = open("/dev/uinput", O_WRONLY|O_NONBLOCK);
-	exitif(ui_fd == -1, "Faile to open /dev/uinput");
+	exitif(ui_fd == -1, "cannot open /dev/uinput");
 	struct uinput_setup usetup = {};
 	
 	ioctl(ui_fd, UI_SET_EVBIT, EV_KEY);
@@ -45,7 +45,7 @@ static void mouse_emit(int type, int code, int val) {
 	ie.time.tv_sec = 0;
 	ie.time.tv_usec = 0;
 	
-	exitif(write(ui_fd, &ie, sizeof(ie)) == -1, "Failed to whire on /dev/uinput");
+	exitif(write(ui_fd, &ie, sizeof(ie)) == -1, "cannot write to /dev/uinput");
 }
 
 void mouse_move_x(int dx) {

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <pthread.h>
@@ -44,7 +45,6 @@ static char *device_name = NULL;
 
 // if non null,
 // it will display coordinates
-// instead of moving the mouse
 static int verbose = 0;
 
 // if non null,
@@ -251,8 +251,8 @@ static void print_help(int argc, char *argv[]) {
 	printf("\n");
 	print_text_area(0, EXPLANATION_AREA_LEN,
 					"This program implements a customizable edge motion "
-					"to make your mouse move automatically while touching the "
-					"edge of your touchpad.\n");
+					"to make your mouse move automatically while touching "
+					"the edge of your touchpad.\n");
 	printf("┌───────────────────────────────────┐\n");
 	printf("│   min_x     thickness     max_x   │\n");
 	printf("│min_y──────────────────────────┐   │\n");

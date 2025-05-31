@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <stdint.h>
+#include <errno.h>
 
 #include "touchpad.h"
 #include "util.h"
@@ -93,7 +94,7 @@ static void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
  */
 static int get_touchpad(char *device_name) {
 	DIR *dir = opendir(EVENT_DIR);
-	exitif(dir == NULL, "openning the event directory");
+	exitif(dir == NULL, "cannot open %s directory", EVENT_DIR);
 	struct dirent *de;
 	int prefix_len = strlen(EVENT_FILE_PREFIX);
 	int fd = -1;
@@ -103,7 +104,7 @@ static int get_touchpad(char *device_name) {
 	int best_mark = 0;
 	
 	while ((de = readdir(dir))) {
-		exitif(errno != 0, "reading the event directory");
+		exitif(errno != 0, "cannot read from %s directory", EVENT_DIR);
 		
 		if (strncmp(de->d_name, EVENT_FILE_PREFIX, prefix_len)) continue;
 		char path[255];
@@ -111,7 +112,7 @@ static int get_touchpad(char *device_name) {
 		strcat(path, de->d_name);
 		
 		fd = open(path, O_RDONLY);
-		exitif(fd == -1, "opening an event file");
+		exitif(fd == -1, "cannot open %s", path);
 		
 		touchpad_resemblance_t tr = {};
 		get_touchpad_resemblance(fd, &tr);
@@ -122,16 +123,16 @@ static int get_touchpad(char *device_name) {
 			best_tr = tr;
 			best_mark = 1;
 			if (names_equal) {
-				exitif(close(fd) == -1, "closing an event file");
+				exitif(close(fd) == -1, "cannot close %s", path);
 				fd = -1;
 				break;
 			}
 		}
 		
-		exitif(close(fd) == -1, "closing an event file");
+		exitif(close(fd) == -1, "cannot close %s", path);
 		fd = -1;
 	}
-	exitif(closedir(dir) == -1, "clossing the event directory");
+	exitif(closedir(dir) == -1, "cannot close %s directory", EVENT_DIR);
 	
 	if (best_mark == 0) {
 		if (!device_name) fprintf(stderr, "No touchpad found\n");
@@ -156,7 +157,7 @@ static int get_touchpad(char *device_name) {
 	}
 	
 	fd = open(best_path, O_RDONLY);
-	exitif(fd == -1, "opening the found device event file");
+	exitif(fd == -1, "cannot open %s", best_path);
 	return fd;
 }
 
@@ -201,7 +202,7 @@ void touchpad_read_next_event() {
 	struct input_event event = {};
 	
 	exitif(read(touch_st.fd, &event, sizeof(event)) == -1,
-		   "reading from the touchpad event file");
+		   "cannot read from the touchpad event file");
 	if (event.type == EV_KEY) {
 		//printf("%d %d %d\n", event.type, event.code, event.value);
 		switch (event.code) {
@@ -280,5 +281,5 @@ void touchpad_signal() {
 
 void touchpad_clean() {
 	if (touch_st.fd == -1) return;
-	exitif(close(touch_st.fd) == -1, "closing the touchpad event file");
+	exitif(close(touch_st.fd) == -1, "cannot close the touchpad event file");
 }
