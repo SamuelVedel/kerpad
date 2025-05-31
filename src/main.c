@@ -282,6 +282,13 @@ static void print_help(int argc, char *argv[]) {
 					"values.");
 }
 
+/**
+ * Parse and handle command line arguments
+ *
+ * return 0 on success
+ *        1 if the help was printed
+ *        a negative value on error
+ */
 static int parse_args(int argc, char *argv[]) {
 	while (1) {
 		int opt = getopt_long(argc, argv, "t:x:X:y:Y:n:avh", long_options, NULL);
@@ -314,7 +321,7 @@ static int parse_args(int argc, char *argv[]) {
 			break;
 		case 'h':
 			print_help(argc, argv);
-			return 0;
+			return 1;
 		case '\n':
 			printf(" o/ <(hey");
 			if (optarg) printf(" %s)\n", optarg);
@@ -324,16 +331,19 @@ static int parse_args(int argc, char *argv[]) {
 			break;
 		case '?':
 			print_help(argc, argv);
-			return 0;
+			return -1;
 		}
 	}
-	return 1;
+	return 0;
 }
 
 int main(int argc, char *argv[]) {
 	block_sigint();
-	if (!parse_args(argc, argv))
+	int parse_result = parse_args(argc, argv);
+	if (parse_result < 0)
 		return EXIT_FAILURE;
+	else if (parse_result == 1)
+		return EXIT_SUCCESS;
 	
 	touchpad_settings_t settings = {
 		.device_name = device_name,
