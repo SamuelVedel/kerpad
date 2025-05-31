@@ -20,6 +20,6 @@ void exitif(int condition, const char *prefix, ...) {
 		} else {
 			fprintf(stderr, "%s\n", format_prefix);
 		}
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 }
