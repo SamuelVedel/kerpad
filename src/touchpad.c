@@ -29,12 +29,22 @@
 // to be a double touch
 #define DOUBLE_TOUCH_TIME 250
 
+struct occured_events {
+	// values are ignored if < 0
+	int x;
+	int y;
+	int touched;
+	int pressed;
+	unsigned long touch_time;
+};
+
 struct touchpad_struct {
 	touchpad_settings_t settings;
 	int fd;
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
 	unsigned long last_touch_time;
+	struct occured_events occured;
 	touchpad_info_t info;
 };
 
@@ -161,6 +171,13 @@ static int get_touchpad(char *device_name) {
 	return fd;
 }
 
+static void reset_occured_events(struct occured_events *evt) {
+	evt->x = -1;
+	evt->y = -1;
+	evt->touched = -1;
+	evt->pressed = -1;
+}
+
 static void init_edge_limits() {
 	struct input_absinfo xlimits = {};
 	exitif(ioctl(touch_st.fd, EVIOCGABS(ABS_X), &xlimits) == -1, "ioctl get x limits");
@@ -181,6 +198,7 @@ int touchpad_init(touchpad_settings_t *settings) {
 	
 	touch_st.fd = fd;
 	touch_st.settings = *settings;
+	reset_occured_events(&touch_st.occured);
 	init_edge_limits();
 	return 0;
 }
@@ -198,66 +216,71 @@ static int dont_touch_borders() {
 		&& y <= touch_st.settings.maxy;
 }
 
+static void applie_occured_events(struct occured_events *evt) {
+	pthread_mutex_lock(&touch_st.mutex);
+	if (evt->x >= 0) {
+		touch_st.info.x = evt->x;
+		if (evt->x <= touch_st.settings.minx)
+			touch_st.info.edgex = -1;
+		else if (evt->x >= touch_st.settings.maxx)
+			touch_st.info.edgex = 1;
+		else touch_st.info.edgex = 0;
+	}
+	if (evt->y >= 0) {
+		touch_st.info.y = evt->y;
+		if (evt->y <= touch_st.settings.miny)
+			touch_st.info.edgey = -1;
+		else if (evt->y >= touch_st.settings.maxy)
+			touch_st.info.edgey = 1;
+		else touch_st.info.edgey = 0;
+	}
+	
+	if (evt->touched >= 0 && (evt->touched == 0 || dont_touch_borders())) {
+		touch_st.info.touching = evt->touched;
+		if (evt->touched == 0) touch_st.info.double_touching = 0;
+		if (evt->touched > 0) {
+			if (evt->touch_time-touch_st.last_touch_time < DOUBLE_TOUCH_TIME) {
+				// double touch detected
+				touch_st.info.double_touching = 1;
+			}
+			touch_st.last_touch_time = evt->touch_time;
+		}
+	}
+	
+	if (evt->pressed >= 0) touch_st.info.pressing = evt->pressed;
+	pthread_mutex_unlock(&touch_st.mutex);
+	
+	if (evt->touched > 0 || evt->pressed > 0)
+		pthread_cond_signal(&touch_st.cond);
+}
+
 void touchpad_read_next_event() {
 	struct input_event event = {};
 	
 	exitif(read(touch_st.fd, &event, sizeof(event)) == -1,
 		   "cannot read from the touchpad event file");
-	if (event.type == EV_KEY) {
-		//printf("%d %d %d\n", event.type, event.code, event.value);
+	if (event.type == EV_SYN) {
+		applie_occured_events(&touch_st.occured);
+		reset_occured_events(&touch_st.occured);
+	} else if (event.type == EV_KEY) {
 		switch (event.code) {
 		case 330: // touched
-			pthread_mutex_lock(&touch_st.mutex);
-			touch_st.info.touching = event.value;
-			if (!event.value) touch_st.info.double_touching = 0;
-			pthread_mutex_unlock(&touch_st.mutex);
-			
-			// save touch time
-			// and check for double touch
-			if (event.value) {
-				unsigned long touch_time = EVENT_TIME_MILLI(event);
-				if (touch_time-touch_st.last_touch_time < DOUBLE_TOUCH_TIME
-					&& dont_touch_borders()) {
-					// double touch detected
-					pthread_mutex_lock(&touch_st.mutex);
-					touch_st.info.double_touching = 1;
-					pthread_mutex_unlock(&touch_st.mutex);
-				}
-				touch_st.last_touch_time = touch_time;
-				pthread_cond_signal(&touch_st.cond);
-			}
+			touch_st.occured.touched = event.value;
+			if (event.value)
+				touch_st.occured.touch_time = EVENT_TIME_MILLI(event);
 			break;
 		case 272: // pressed
-			pthread_mutex_lock(&touch_st.mutex);
-			touch_st.info.pressing = event.value;
-			pthread_mutex_unlock(&touch_st.mutex);
-			
-			if (event.value)
-				pthread_cond_signal(&touch_st.cond);
+			touch_st.occured.pressed = event.value;
 			break;
 		}
 	} else if (event.type == EV_ABS) {
 		// moved
 		switch (event.code) {
 		case ABS_X:
-			pthread_mutex_lock(&touch_st.mutex);
-			touch_st.info.x = event.value;
-			if (event.value <= touch_st.settings.minx)
-				touch_st.info.edgex = -1;
-			else if (event.value >= touch_st.settings.maxx)
-				touch_st.info.edgex = 1;
-			else touch_st.info.edgex = 0;
-			pthread_mutex_unlock(&touch_st.mutex);
+			touch_st.occured.x = event.value;
 			break;
 		case ABS_Y:
-			pthread_mutex_lock(&touch_st.mutex);
-			touch_st.info.y = event.value;
-			if (event.value <= touch_st.settings.miny)
-				touch_st.info.edgey = -1;
-			else if (event.value >= touch_st.settings.maxy)
-				touch_st.info.edgey = 1;
-			else touch_st.info.edgey = 0;
-			pthread_mutex_unlock(&touch_st.mutex);
+			touch_st.occured.y = event.value;
 			break;
 		}
 	}
