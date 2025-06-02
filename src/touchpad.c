@@ -235,7 +235,9 @@ static void applie_occured_events(struct occured_events *evt) {
 		else touch_st.info.edgey = 0;
 	}
 	
-	if (evt->touched >= 0 && (evt->touched == 0 || dont_touch_borders())) {
+	if (evt->touched >= 0 &&
+		(evt->touched == 0 || dont_touch_borders()
+		 || touch_st.settings.no_edge_protection)) {
 		touch_st.info.touching = evt->touched;
 		if (evt->touched == 0) touch_st.info.double_touching = 0;
 		if (evt->touched > 0) {
@@ -259,6 +261,7 @@ void touchpad_read_next_event() {
 	
 	exitif(read(touch_st.fd, &event, sizeof(event)) == -1,
 		   "cannot read from the touchpad event file");
+	//printf("%d %d %d\n", event.type, event.code, event.value);
 	if (event.type == EV_SYN) {
 		applie_occured_events(&touch_st.occured);
 		reset_occured_events(&touch_st.occured);

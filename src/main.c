@@ -27,6 +27,8 @@
 #define EXPLANATION_AREA_LEN 50
 #define OPT_DESCRIPTION_AREA_LEN 30
 
+#define NO_EDGE_PROTECTION_OPTION 1
+
 static bool running = true;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -37,6 +39,8 @@ static int maxx = -1;
 static int maxy = -1;
 
 static int edge_thickness = -1;
+
+static bool no_edge_protection = false;
 
 // if non null,
 // it will listen to a device
@@ -65,6 +69,7 @@ static struct option long_options[] = {
 	
 	{"name", required_argument, NULL, 'n'},
 	{"always", no_argument, NULL, 'a'},
+	{"no_edge_protection", no_argument, NULL, NO_EDGE_PROTECTION_OPTION},
 	{"verbose", no_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
 	
@@ -113,7 +118,6 @@ static void *touchpad_thread(void *arg) {
 	pthread_mutex_lock(&running_mutex);
 	while (running) {
 		pthread_mutex_unlock(&running_mutex);
-		//printf("touch\n");
 		touchpad_read_next_event();
 		pthread_mutex_lock(&running_mutex);
 	}
@@ -226,33 +230,37 @@ static void print_option(const struct option *opt, char short_opt, const char *a
 static void print_help(int argc, char *argv[]) {
 	UNUSED(argc);
 	bool color = isatty(STDOUT_FILENO);
+	int i = 0;
 	printf("Usage: %s [options]\n", argv[0]);
-	print_option(long_options+0, 't', "edge_thickness", color,
+	print_option(long_options+i++, 't', "edge_thickness", color,
 				 "Change the edge thickness");
-	print_option(long_options+1, 'x', "min_x", color,
+	print_option(long_options+i++, 'x', "min_x", color,
 				 "Change min_x");
-	print_option(long_options+2, 'X', "max_x", color,
+	print_option(long_options+i++, 'X', "max_x", color,
 				 "Change max_x");
-	print_option(long_options+3, 'y', "min_y", color,
+	print_option(long_options+i++, 'y', "min_y", color,
 				 "Change min_y");
-	print_option(long_options+4, 'Y', "max_y", color,
+	print_option(long_options+i++, 'Y', "max_y", color,
 				 "Change max_y");
-	print_option(long_options+5, 'n', "name", color,
+	print_option(long_options+i++, 'n', "name", color,
 				 "Specify the touchpad name");
-	print_option(long_options+6, 'a', NULL, color,
+	print_option(long_options+i++, 'a', NULL, color,
 				 "Activate edge motion even "
 				 "when the touchpad is justed touched");
-	print_option(long_options+7, 'v', NULL, color,
+	print_option(long_options+i++, 0, NULL, color,
+				 "Don't ignore touches made beyond the edge limits");
+	print_option(long_options+i++, 'v', NULL, color,
 				 "Display coordinates while "
 				 "pressing the touchpad");
-	print_option(long_options+8, 'h', NULL, color,
+	print_option(long_options+i++, 'h', NULL, color,
 				 "Display this help and exit");
 	
 	printf("\n");
 	print_text_area(0, EXPLANATION_AREA_LEN,
 					"This program implements a customizable edge motion "
 					"to make your mouse move automatically while touching "
-					"the edge of your touchpad.\n");
+					"the edge of your touchpad.");
+	printf("\n");
 	printf("┌───────────────────────────────────┐\n");
 	printf("│   min_x     thickness     max_x   │\n");
 	printf("│min_y──────────────────────────┐   │\n");
@@ -316,6 +324,9 @@ static int parse_args(int argc, char *argv[]) {
 		case 'a':
 			move_touched = 1;
 			break;
+		case NO_EDGE_PROTECTION_OPTION:
+			no_edge_protection = true;
+			break;
 		case 'v':
 			verbose = 1;
 			break;
@@ -351,7 +362,8 @@ int main(int argc, char *argv[]) {
 		.maxx = maxx,
 		.miny = miny,
 		.maxy = maxy,
-		.edge_thickness = edge_thickness
+		.edge_thickness = edge_thickness,
+		.no_edge_protection = no_edge_protection,
 	};
 	if (touchpad_init(&settings) < 0) {
 		return EXIT_FAILURE;

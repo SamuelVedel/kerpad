@@ -22,6 +22,7 @@ struct touchpad_settings {
 	// if non null, it will search
 	// for a touchpad with this name
 	char *device_name;
+	
 	// the below variables describe the limits
 	// on the touchpad after which it is concidere
 	// beeing the edge
@@ -34,12 +35,17 @@ struct touchpad_settings {
 	int maxx;
 	int miny;
 	int maxy;
+	
 	// this value will be used to determine
 	// non defined edge limits
 	//
 	// if this value is negative, then a
 	// default value will be used
 	int edge_thickness;
+	
+	// if false, it will ignore touches made beyond
+	// the edge limites
+	bool no_edge_protection;
 };
 typedef struct touchpad_settings touchpad_settings_t;
 
