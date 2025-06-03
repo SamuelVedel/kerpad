@@ -48,10 +48,15 @@ ifneq ($(PANDOC),)
 	sudo cp kerpad.1.gz /usr/share/man/man1/kerpad.1.gz
 endif
 
+uninstall:
+	sudo rm -f /usr/bin/kerpad
+	sudo rm -f /usr/lib/systemd/system/kerpad.service
+	sudo rm -f /usr/share/man/man1/kerpad.1.gz
+
 clean:
 	rm -f $(OUT)/* kerpad kerpad.service *~ */*~
 ifneq ($(PANDOC),)
 	rm -f kerpad.1 kerpad.1.gz
 endif
 
-.PHONY: all clean coorpad run_coorpad install
+.PHONY: all clean install uninstall
