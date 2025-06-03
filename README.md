@@ -17,6 +17,7 @@ The first version of this program used eBPF to work, but it was overkill and con
 To compile, this program depends on:
  - gcc
  - make
+ - pandoc (only if you want the man page)
 
 ### Compile and run it
 

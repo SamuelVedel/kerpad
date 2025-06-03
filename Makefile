@@ -7,7 +7,14 @@ SRC = src
 
 KERPAD_ARGS ?=
 
+PANDOC ?= $(shell which pandoc 2> /dev/null)
+
+ifeq ($(PANDOC),)
 all: kerpad
+else
+all: kerpad kerpad.1.gz
+endif
+
 
 $(OUT)/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -24,11 +31,27 @@ kerpad: $(OUT)/main.o $(OUT)/touchpad.o $(OUT)/mouse.o $(OUT)/util.o
 kerpad.service: kerpad.service.template
 	cat kerpad.service.template | sed "s/<args>/$(shell echo $(KERPAD_ARGS) | sed 's/\//\\\//g')/" > kerpad.service
 
+kerpad.1: kerpad.1.md
+	pandoc $< -s -t man -o $@
+
+kerpad.1.gz: kerpad.1
+	gzip -kf $<
+
+ifeq ($(PANDOC),)
 install: kerpad kerpad.service
+else
+install: kerpad kerpad.service kerpad.1.gz
+endif
 	sudo cp ./kerpad /usr/bin/kerpad
 	sudo cp kerpad.service /usr/lib/systemd/system/kerpad.service
+ifneq ($(PANDOC),)
+	sudo cp kerpad.1.gz /usr/share/man/man1/kerpad.1.gz
+endif
 
 clean:
 	rm -f $(OUT)/* kerpad kerpad.service *~ */*~
+ifneq ($(PANDOC),)
+	rm -f kerpad.1 kerpad.1.gz
+endif
 
 .PHONY: all clean coorpad run_coorpad install
