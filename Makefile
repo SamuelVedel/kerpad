@@ -5,6 +5,10 @@ LDLIBS =
 OUT = build
 SRC = src
 
+KERPAD_INSTALL = /usr/bin/kerpad
+SERVICE_INSTALL = /usr/lib/systemd/system/kerpad.service
+MAN_INSTALL = /usr/share/man/man1/kerpad.1.gz
+
 KERPAD_ARGS ?=
 
 PANDOC ?= $(shell which pandoc 2> /dev/null)
@@ -37,26 +41,31 @@ kerpad.1: kerpad.1.md
 kerpad.1.gz: kerpad.1
 	gzip -kf $<
 
+$(KERPAD_INSTALL): kerpad
+	sudo cp $< $@
+
+$(SERVICE_INSTALL): kerpad.service
+	sudo cp $< $@
+
+$(MAN_INSTALL): kerpad.1.gz
+	sudo cp $< $@
+
+install_kerpad: $(KERPAD_INSTALL)
+install_service: $(SERVICE_INSTALL)
+install_man: $(MAN_INSTALL)
+
 ifeq ($(PANDOC),)
-install: kerpad kerpad.service
+install: $(KERPAD_INSTALL) $(SERVICE_INSTALL)
 else
-install: kerpad kerpad.service kerpad.1.gz
-endif
-	sudo cp ./kerpad /usr/bin/kerpad
-	sudo cp kerpad.service /usr/lib/systemd/system/kerpad.service
-ifneq ($(PANDOC),)
-	sudo cp kerpad.1.gz /usr/share/man/man1/kerpad.1.gz
+install: $(KERPAD_INSTALL) $(SERVICE_INSTALL) $(MAN_INSTALL)
 endif
 
 uninstall:
-	sudo rm -f /usr/bin/kerpad
-	sudo rm -f /usr/lib/systemd/system/kerpad.service
-	sudo rm -f /usr/share/man/man1/kerpad.1.gz
+	sudo rm -f $(KERPAD_INSTALL)
+	sudo rm -f $(SERVICE_INSTALL)
+	sudo rm -f $(MAN_INSTALL)
 
 clean:
-	rm -f $(OUT)/* kerpad kerpad.service *~ */*~
-ifneq ($(PANDOC),)
-	rm -f kerpad.1 kerpad.1.gz
-endif
+	rm -f $(OUT)/* kerpad kerpad.service *~ */*~ kerpad.1 kerpad.1.gz
 
 .PHONY: all clean install uninstall
