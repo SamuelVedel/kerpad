@@ -15,6 +15,7 @@
 #include <sys/time.h>
 #include <stdint.h>
 #include <errno.h>
+#include <stdbool.h>
 
 #include "touchpad.h"
 #include "util.h"

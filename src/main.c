@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
+#include <stdbool.h>
 
 #include "touchpad.h"
 #include "mouse.h"
