@@ -25,7 +25,8 @@
 #define MACRO_TO_STR(x) TO_STR(x)
 
 #define EXPLANATION_AREA_LEN 50
-#define OPT_DESCRIPTION_AREA_LEN 30
+#define OPT_DESCRIPTION_AREA_OFFSET 8
+#define OPT_DESCRIPTION_AREA_LEN EXPLANATION_AREA_LEN-OPT_DESCRIPTION_AREA_OFFSET
 
 #define NO_EDGE_PROTECTION_OPTION 1
 
@@ -160,7 +161,7 @@ static void *mouse_thread(void *arg) {
  */
 static int word_len(const char *str) {
 	int len = 0;
-	while (*str != ' ' && *str != 0) {
+	while (*str != ' ' && *str != 0 && *str != '\n') {
 		++len;
 		++str;
 	}
@@ -176,8 +177,12 @@ static void print_text_area(int offset, int len, const char *text) {
 	int line_len = 0;
 	while (*text != 0) {
 		int wlen = word_len(text);
-		if (line_len+wlen > len && line_len > 0) {
+		if ((line_len+wlen > len && line_len > 0) || *text == '\n') {
 			printf("\n");
+			if (*text == '\n') {
+				++text;
+				while (*text == ' ') ++text;
+			}
 			for (int i = 0; i < offset; ++i) printf(" ");
 			line_len = 0;
 			continue;
@@ -224,7 +229,8 @@ static void print_option(const struct option *opt, char short_opt, const char *a
 	printf("%s--%s%s%s\n",
 		   color? WHITE_BOLD: "", opt->name, color? WHITE: "",
 		   long_arg_str);
-	print_text_area(8, OPT_DESCRIPTION_AREA_LEN, description);
+	print_text_area(OPT_DESCRIPTION_AREA_OFFSET,
+					OPT_DESCRIPTION_AREA_LEN, description);
 }
 
 static void print_help(int argc, char *argv[]) {
@@ -251,7 +257,9 @@ static void print_help(int argc, char *argv[]) {
 				 "Don't ignore touches made beyond the edge limits");
 	print_option(long_options+i++, 'v', NULL, color,
 				 "Display coordinates while "
-				 "pressing the touchpad");
+				 "pressing the touchpad\n"
+				 "If combine with -a, it will display the coordinates "
+				 "event when the touchpad is justed touched");
 	print_option(long_options+i++, 'h', NULL, color,
 				 "Display this help and exit");
 	
