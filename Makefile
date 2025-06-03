@@ -68,4 +68,4 @@ uninstall:
 clean:
 	rm -f $(OUT)/* kerpad kerpad.service *~ */*~ kerpad.1 kerpad.1.gz
 
-.PHONY: all clean install uninstall
+.PHONY: all clean install uninstall install_kerpad install_service install_man
