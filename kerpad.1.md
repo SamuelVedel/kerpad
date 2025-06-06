@@ -3,7 +3,7 @@ title: KERPAD
 section: 1
 header: Kerpad Manual
 footer: kerpad
-date: June 03, 2021
+date: 2025-06-04
 ---
 
 # NAME
@@ -30,7 +30,7 @@ This program implements a customizable edge motion to make your mouse move autom
 │                                   │
 └───────────────────────────────────┘
 ```
-The above drawing represents you touchpad. When your  touchpad is pressed (or double-tapped), if your finger is  between the two square (at the edge of the touchpad), then this program will make the mouse move automatically. By  default, the edge limits are defined automatically in  relation to your touchpad size and a default thickness  (=250). If you don't like the default limits, you can use options to change the thickness or directly the limit values.
+The above drawing represents you touchpad. When your  touchpad is pressed (or double-tapped), if your finger is between the two squares (at the edge of the touchpad), then this program will make the mouse move automatically. By  default, the edge limits are defined automatically in relation to your touchpad size and a default thickness (=250). If you don't like the default limits, you can use options to change the thickness or directly the limit values.
 
 # OPTIONS
 **-t** \<edge_thickness\>, **-\-thickness**=\<edge_thickness\>
@@ -58,17 +58,27 @@ The above drawing represents you touchpad. When your  touchpad is pressed (or do
 : Don't ignore touches made beyond the edge limits
 
 **-v**, **-\-verbose**
-: Display coordinates while pressing the touchpad. If combine with **-a**, it will display the coordinates event when the touchpad is justed touched, this is useful to configurate to edge limits
+: Display coordinates while pressing the touchpad. If combine with **-a**, it will display the coordinates even when the touchpad is just touched, this is useful to configure to edge limits
 
 **-h**, **-\-help**
 : Display an help and exit
 
-# KNOWN ISSUES
+# EXIT STATUS
+
+The following exit values shall be returned:
+
+0
+: The program worked correclty.
+
+\>0
+: An error occurred.
+
+# BUGS
 
 This program does not support the multi-touch protocol yet.
 
 # AUTHOR
-Written by Samuel Vedel
+Written by Samuel Vedel.
 
-# RESOURCES
+# SEE ALSO
 GitHub: [https://github.com/SamuelVedel/kerpad](https://github.com/SamuelVedel/kerpad)
