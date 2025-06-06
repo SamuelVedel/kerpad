@@ -60,7 +60,7 @@ before the previous commands (you may have to remove `kerpad.service` if it alre
 
 You can change the template for `kerpad.service` by editing `kerpad.service.template`.
 
-### Unistall it
+### Uninstall it
 
 If you don't want to use Kerpad anymore, you can uninstall it with the command:
 ```
