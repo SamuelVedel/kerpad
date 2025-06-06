@@ -253,14 +253,14 @@ static void print_help(int argc, char *argv[]) {
 				 "Specify the touchpad name");
 	print_option(long_options+i++, 'a', NULL, color,
 				 "Activate edge motion even "
-				 "when the touchpad is justed touched");
+				 "when the touchpad is just touched");
 	print_option(long_options+i++, 0, NULL, color,
 				 "Don't ignore touches made beyond the edge limits");
 	print_option(long_options+i++, 'v', NULL, color,
 				 "Display coordinates while "
 				 "pressing the touchpad\n"
 				 "If combine with -a, it will display the coordinates "
-				 "event when the touchpad is justed touched");
+				 "even when the touchpad is just touched");
 	print_option(long_options+i++, 'h', NULL, color,
 				 "Display this help and exit");
 	
@@ -287,7 +287,7 @@ static void print_help(int argc, char *argv[]) {
 	print_text_area(0, EXPLANATION_AREA_LEN,
 					"The above drawing represents you touchpad. "
 					"When your touchpad is pressed (or double-tapped), "
-					"if your finger is between the two square (at "
+					"if your finger is between the two squares (at "
 					"the edge of the touchpad), then this program "
 					"will make the mouse "
 					"move automatically. By default, the edge limits "
