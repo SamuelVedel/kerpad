@@ -8,6 +8,12 @@ void mouse_init();
 
 /**
  * Add dx to mouse abscissa
+ * and dy to mouse ordinate
+ */
+void mouse_move(int dx, int dy);
+
+/**
+ * Add dx to mouse abscissa
  * coordinate
  */
 void mouse_move_x(int dx);

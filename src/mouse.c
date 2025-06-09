@@ -48,6 +48,12 @@ static void mouse_emit(int type, int code, int val) {
 	exitif(write(ui_fd, &ie, sizeof(ie)) == -1, "cannot write to /dev/uinput");
 }
 
+void mouse_move(int dx, int dy) {
+	mouse_emit(EV_REL, REL_X, dx);
+	mouse_emit(EV_REL, REL_Y, dy);
+	mouse_emit(EV_SYN, SYN_REPORT, 0);
+}
+
 void mouse_move_x(int dx) {
 	mouse_emit(EV_REL, REL_X, dx);
 	mouse_emit(EV_SYN, SYN_REPORT, 0);

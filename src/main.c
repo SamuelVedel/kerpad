@@ -14,8 +14,7 @@
 #define UNUSED(x) ((void)x);
 
 #define SLEEP_TIME 3000
-//#define CORNER_SLEEP_TIME (SLEEP_TIME*1414/1000)
-#define CORNER_SLEEP_TIME (SLEEP_TIME*2)
+#define CORNER_SLEEP_TIME (SLEEP_TIME*1414/1000)
 #define CURSOR_SPEED 1
 
 // ANSI escapes
@@ -142,8 +141,14 @@ static void *mouse_thread(void *arg) {
 			|| (move_touched && info.touching);
 		if (active) {
 			if (verbose) printf("x:%d y:%d\n", info.x, info.y);
-			if (info.edgex) mouse_move_x(info.edgex*CURSOR_SPEED);
-			if (info.edgey) mouse_move_y(info.edgey*CURSOR_SPEED);
+			
+			if (info.edgex && info.edgey) {
+				mouse_move(info.edgex*CURSOR_SPEED, info.edgey*CURSOR_SPEED);
+			} else if (info.edgex) {
+				mouse_move_x(info.edgex*CURSOR_SPEED);
+			} else if (info.edgey) {
+				mouse_move_y(info.edgey*CURSOR_SPEED);
+			}
 		}
 		
 		if (!active) touchpad_wait();
