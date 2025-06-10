@@ -110,16 +110,29 @@ static void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
 	TR_SET_PRESS(*tr, keybit[PRESS_CODE/8]&(1<<(PRESS_CODE%8)));
 }
 
+static void print_touchpad_resemblance(touchpad_resemblance_t *tr) {
+	printf("%s:\n", tr->name);
+	if (TR_HAS_ABS(*tr)) printf(" - support absolute values events\n");
+	if (TR_HAS_XY(*tr)) printf(" - support x/y absolute values events\n");
+	if (TR_HAS_MT(*tr)) printf(" - support mutli-touch protocol\n");
+	if (TR_HAS_KEY(*tr)) printf(" - support key events\n");
+	if (TR_HAS_TOUCH(*tr)) printf(" - support touch events\n");
+	if (TR_HAS_PRESS(*tr)) printf(" - support press events\n");
+}
+
 /**
  * Return a file descriptor describing the touchpad
+ * 
  * if device_name is not null, it will search for a device
  * with this name. Otherwise it will try to found the device
  * that look like a touchpad the most.
+ * 
+ * list can be LIST_NO, LIST_CANDIDATES or LIST_ALL
  *
  * Return the file descriptor on success, and -1 if no such device
  * are found
  */
-static int get_touchpad(char *device_name) {
+static int get_touchpad(char *device_name, int list) {
 	DIR *dir = opendir(EVENT_DIR);
 	exitif(dir == NULL, "cannot open %s directory", EVENT_DIR);
 	struct dirent *de;
@@ -144,6 +157,11 @@ static int get_touchpad(char *device_name) {
 		touchpad_resemblance_t tr = {};
 		get_touchpad_resemblance(fd, &tr);
 		int mark = TR_GET_MARK(tr);
+		
+		if (list == LIST_ALL || (list == LIST_CANDIDATES && mark)) {
+			print_touchpad_resemblance(&tr);
+		}
+		
 		bool names_equal = device_name && !strcmp(device_name, tr.name);
 		if ((!device_name && best_mark < mark) || names_equal) {
 			strcpy(best_path, path);
@@ -224,7 +242,7 @@ static void init_edge_limits() {
 }
 
 int touchpad_init(touchpad_settings_t *settings) {
-	int fd = get_touchpad(settings->device_name);
+	int fd = get_touchpad(settings->device_name, settings->list);
 	if (fd < 0) return -1;
 	
 	touch_st.fd = fd;

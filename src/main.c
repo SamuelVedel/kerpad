@@ -43,6 +43,8 @@ static int edge_thickness = -1;
 
 static bool no_edge_protection = false;
 
+static int list = LIST_NO;
+
 // if non null,
 // it will listen to a device
 // with this name
@@ -71,6 +73,7 @@ static struct option long_options[] = {
 	{"name", required_argument, NULL, 'n'},
 	{"always", no_argument, NULL, 'a'},
 	{"no_edge_protection", no_argument, NULL, NO_EDGE_PROTECTION_OPTION},
+	{"list", optional_argument, NULL, 'l'},
 	{"verbose", no_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
 	
@@ -217,11 +220,9 @@ static void print_option(const struct option *opt, char short_opt, const char *a
 	char short_arg_str[255] = {};
 	char long_arg_str[255] = {};
 	if (opt->has_arg != no_argument) {
-		sprintf(short_arg_str, " %s<%s>%s",
-				opt->has_arg == optional_argument? "[": "",
-				arg_name,
-				opt->has_arg == optional_argument? "]": "");
-		sprintf(long_arg_str, "%s=<%s>%s",
+		if (opt->has_arg == required_argument)
+			sprintf(short_arg_str, " %s", arg_name);
+		sprintf(long_arg_str, "%s=%s%s",
 				opt->has_arg == optional_argument? "[": "",
 				arg_name,
 				opt->has_arg == optional_argument? "]": "");
@@ -261,6 +262,10 @@ static void print_help(int argc, char *argv[]) {
 				 "when the touchpad is just touched");
 	print_option(long_options+i++, 0, NULL, color,
 				 "Don't ignore touches made beyond the edge limits");
+	print_option(long_options+i++, 'l', "WHICH", color,
+				 "List caracteritics of input devices. WHICH value can be:\n"
+				 "- candidates (default value): list only candidates devices\n"
+				 "- all: list all input devices");
 	print_option(long_options+i++, 'v', NULL, color,
 				 "Display coordinates while "
 				 "pressing the touchpad\n"
@@ -313,7 +318,7 @@ static void print_help(int argc, char *argv[]) {
  */
 static int parse_args(int argc, char *argv[]) {
 	while (1) {
-		int opt = getopt_long(argc, argv, "t:x:X:y:Y:n:avh", long_options, NULL);
+		int opt = getopt_long(argc, argv, "t:x:X:y:Y:n:lavh", long_options, NULL);
 		if (opt == -1) break;
 		
 		switch (opt) {
@@ -340,6 +345,16 @@ static int parse_args(int argc, char *argv[]) {
 			break;
 		case NO_EDGE_PROTECTION_OPTION:
 			no_edge_protection = true;
+			break;
+		case 'l':
+			if (!optarg || !strcmp(optarg, "candidates")) {
+				list = LIST_CANDIDATES;
+			} else if (!strcmp(optarg, "all")) {
+				list = LIST_ALL;
+			} else {
+				print_help(argc, argv);
+				return -1;
+			}
 			break;
 		case 'v':
 			verbose = 1;
@@ -378,9 +393,14 @@ int main(int argc, char *argv[]) {
 		.maxy = maxy,
 		.edge_thickness = edge_thickness,
 		.no_edge_protection = no_edge_protection,
+		.list = list,
 	};
 	if (touchpad_init(&settings) < 0) {
 		return EXIT_FAILURE;
+	}
+	if (list != LIST_NO) {
+		touchpad_clean();
+		return EXIT_SUCCESS;
 	}
 	mouse_init();
 	

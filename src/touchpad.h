@@ -5,6 +5,10 @@
 
 #define DEFAULT_EDGE_THICKNESS 250
 
+#define LIST_NO 0
+#define LIST_CANDIDATES 1
+#define LIST_ALL 2
+
 struct touchpad_info {
 	int x;
 	int y;
@@ -48,6 +52,13 @@ struct touchpad_settings {
 	// if false, it will ignore touches made beyond
 	// the edge limites
 	bool no_edge_protection;
+	
+	// if its value is LIST_CANDIDATES
+	// touchpad_init will list the caracteristics
+	// of candidate devices
+	// if its value is LIST_ALL it will list the
+	// caracteristics of all input devices
+	int list;
 };
 typedef struct touchpad_settings touchpad_settings_t;
 
