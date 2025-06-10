@@ -80,8 +80,8 @@ typedef struct touchpad_resemblance touchpad_resemblance_t;
  * if it looks like a touchpad
  */
 static void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
-	unsigned long evbit[(EV_CNT+7)/8] = {};
-	unsigned long absbit[(ABS_CNT+7)/8] = {};
+	uint8_t evbit[(EV_CNT+7)/8] = {};
+	uint8_t absbit[(ABS_CNT+7)/8] = {};
 	
 	exitif(ioctl(fd, EVIOCGBIT(0, sizeof(evbit)), evbit) == -1, "ioctl evbit");
 	exitif(ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) == -1, "ioctl absbit");
