@@ -264,7 +264,7 @@ static void print_help(int argc, char *argv[]) {
 				 "Don't ignore touches made beyond the edge limits");
 	print_option(long_options+i++, 'l', "WHICH", color,
 				 "List caracteritics of input devices. WHICH value can be:\n"
-				 "- candidates (default value): list only candidates devices\n"
+				 "- candidates: list only candidates devices (default value)\n"
 				 "- all: list all input devices");
 	print_option(long_options+i++, 'v', NULL, color,
 				 "Display coordinates while "
@@ -280,19 +280,19 @@ static void print_help(int argc, char *argv[]) {
 					"to make your mouse move automatically while touching "
 					"the edge of your touchpad.");
 	printf("\n");
-	printf("┌───────────────────────────────────┐\n");
-	printf("│   min_x     thickness     max_x   │\n");
-	printf("│min_y──────────────────────────┐   │\n");
-	printf("│   │                           │   │\n");
-	printf("│   │                           │   │\n");
-	printf("│   │                           │   │\n");
-	printf("│   │         touchpad          │   │\n");
-	printf("│   │                           │   │\n");
-	printf("│   │                           │   │\n");
-	printf("│   │                           │   │\n");
-	printf("│max_y──────────────────────────┘   │\n");
-	printf("│                                   │\n");
-	printf("└───────────────────────────────────┘\n");
+	printf("    ┌───────────────────────────────────┐\n");
+	printf("    │   min_x     thickness     max_x   │\n");
+	printf("    │min_y──────────────────────────┐   │\n");
+	printf("    │   │                           │   │\n");
+	printf("    │   │                           │   │\n");
+	printf("    │   │                           │   │\n");
+	printf("    │   │         touchpad          │   │\n");
+	printf("    │   │                           │   │\n");
+	printf("    │   │                           │   │\n");
+	printf("    │   │                           │   │\n");
+	printf("    │max_y──────────────────────────┘   │\n");
+	printf("    │                                   │\n");
+	printf("    └───────────────────────────────────┘\n");
 	
 	print_text_area(0, EXPLANATION_AREA_LEN,
 					"The above drawing represents you touchpad. "
