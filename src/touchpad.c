@@ -123,9 +123,9 @@ static void print_touchpad_resemblance(touchpad_resemblance_t *tr) {
 /**
  * Return a file descriptor describing the touchpad
  * 
- * if device_name is not null, it will search for a device
+ * if device_name is not null, it will search for the best device
  * with this name. Otherwise it will try to found the device
- * that look like a touchpad the most.
+ * that look the most like a touchpad.
  * 
  * list can be LIST_NO, LIST_CANDIDATES or LIST_ALL
  *
@@ -163,15 +163,12 @@ static int get_touchpad(char *device_name, int list) {
 		}
 		
 		bool names_equal = device_name && !strcmp(device_name, tr.name);
-		if ((!device_name && best_mark < mark) || names_equal) {
+		// To select a device with the correct name even if it is not a touchpad
+		if (names_equal) ++mark;
+		if ((!device_name || names_equal) && best_mark < mark) {
 			strcpy(best_path, path);
 			best_tr = tr;
-			best_mark = 1;
-			if (names_equal) {
-				exitif(close(fd) == -1, "cannot close %s", path);
-				fd = -1;
-				break;
-			}
+			best_mark = mark;
 		}
 		
 		exitif(close(fd) == -1, "cannot close %s", path);
