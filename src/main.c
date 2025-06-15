@@ -264,7 +264,7 @@ static void print_help(int argc, char *argv[]) {
 				 "Don't ignore touches made beyond the edge limits");
 	print_option(long_options+i++, 'l', "WHICH", color,
 				 "List caracteritics of input devices. WHICH value can be:\n"
-				 "- candidates: list only candidates devices (default value)\n"
+				 "- candidates: list only candidate devices (default value)\n"
 				 "- all: list all input devices");
 	print_option(long_options+i++, 'v', NULL, color,
 				 "Display coordinates while "

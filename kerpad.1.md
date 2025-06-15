@@ -57,12 +57,12 @@ The above drawing represents you touchpad. When your  touchpad is pressed (or do
 **-\-no_edge_protection**
 : Don't ignore touches made beyond the edge limits
 
-**-l** **-\-list**[=WHICH]
-: List caracteritics of input devices. WHICH value can be: 
+**-l**, **-\-list**[=WHICH]
+: List caracteritics of input devices. WHICH value can be:
 
-> candidates: list only candidates devices (default value) 
+> candidates: list only candidate devices (default value)
 
-> list all: input devices
+> all: list all input devices
 
 **-v**, **-\-verbose**
 : Display coordinates while pressing the touchpad. If combine with **-a**, it will display the coordinates even when the touchpad is just touched, this is useful to configure to edge limits
