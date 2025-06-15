@@ -29,6 +29,7 @@
 #define OPT_DESCRIPTION_AREA_LEN EXPLANATION_AREA_LEN-OPT_DESCRIPTION_AREA_OFFSET
 
 #define NO_EDGE_PROTECTION_OPTION 1
+#define DISABLE_DOUBLE_TAP_OPTION 2
 
 static bool running = true;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -42,6 +43,7 @@ static int maxy = -1;
 static int edge_thickness = -1;
 
 static bool no_edge_protection = false;
+static bool disable_double_tap = false;
 
 static int list = LIST_NO;
 
@@ -73,6 +75,7 @@ static struct option long_options[] = {
 	{"name", required_argument, NULL, 'n'},
 	{"always", no_argument, NULL, 'a'},
 	{"no_edge_protection", no_argument, NULL, NO_EDGE_PROTECTION_OPTION},
+	{"disable_double_tap", no_argument, NULL, DISABLE_DOUBLE_TAP_OPTION},
 	{"list", optional_argument, NULL, 'l'},
 	{"verbose", no_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
@@ -140,7 +143,8 @@ static void *mouse_thread(void *arg) {
 		touchpad_info_t info = {};
 		touchpad_get_info(&info);
 		
-		bool active = (info.pressed || info.double_tapped)
+		bool active = info.pressed
+			|| (!disable_double_tap && info.double_tapped)
 			|| (move_touched && info.touched);
 		if (active) {
 			if (verbose) printf("x:%d y:%d\n", info.x, info.y);
@@ -262,6 +266,8 @@ static void print_help(int argc, char *argv[]) {
 				 "when the touchpad is just touched");
 	print_option(long_options+i++, 0, NULL, color,
 				 "Don't ignore touches made beyond the edge limits");
+	print_option(long_options+i++, 0, NULL, color,
+				 "Don't concidere the touchpad pressed, when it is double tapped");
 	print_option(long_options+i++, 'l', "WHICH", color,
 				 "List caracteritics of input devices. WHICH value can be:\n"
 				 "- candidates: list only candidate devices (default value)\n"
@@ -345,6 +351,9 @@ static int parse_args(int argc, char *argv[]) {
 			break;
 		case NO_EDGE_PROTECTION_OPTION:
 			no_edge_protection = true;
+			break;
+		case DISABLE_DOUBLE_TAP_OPTION:
+			disable_double_tap = true;
 			break;
 		case 'l':
 			if (!optarg || !strcmp(optarg, "candidates")) {

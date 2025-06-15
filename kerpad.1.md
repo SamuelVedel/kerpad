@@ -57,6 +57,9 @@ The above drawing represents you touchpad. When your  touchpad is pressed (or do
 **-\-no_edge_protection**
 : Don't ignore touches made beyond the edge limits
 
+**-\-disable_double_tap**
+: Don't concidere the touchpad pressed, when it is double tapped
+
 **-l**, **-\-list**[=WHICH]
 : List caracteritics of input devices. WHICH value can be:
 
