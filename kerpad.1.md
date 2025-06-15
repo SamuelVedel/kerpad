@@ -48,6 +48,9 @@ The above drawing represents you touchpad. When your  touchpad is pressed (or do
 **-Y** max_y, **-\-maxy**=max_y
 : Change max_y
 
+**-s** sleep_time, **-\-sleep_time**=sleep_time
+: When edge motion is triggered, the mouse will move one pixel each sleep_time microseconds. The sleep time will be slightly longer when touching a corner. The default sleep time is 3000
+
 **-n** name, **-\-name**=name
 : Specify the touchpad name
 

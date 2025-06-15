@@ -13,8 +13,8 @@
 
 #define UNUSED(x) ((void)x);
 
-#define SLEEP_TIME 3000
-#define CORNER_SLEEP_TIME (SLEEP_TIME*1414/1000)
+#define DEFAULT_SLEEP_TIME 3000
+#define CORNER_SLEEP_TIME(time) (time*1414/1000)
 #define CURSOR_SPEED 1
 
 // ANSI escapes
@@ -41,6 +41,8 @@ static int maxx = -1;
 static int maxy = -1;
 
 static int edge_thickness = -1;
+
+static int sleep_time = DEFAULT_SLEEP_TIME;
 
 static bool no_edge_protection = false;
 static bool disable_double_tap = false;
@@ -71,6 +73,8 @@ static struct option long_options[] = {
 	
 	{"miny", required_argument, NULL, 'y'},
 	{"maxy", required_argument, NULL, 'Y'},
+	
+	{"sleep_time", required_argument, NULL, 's'},
 	
 	{"name", required_argument, NULL, 'n'},
 	{"always", no_argument, NULL, 'a'},
@@ -159,8 +163,8 @@ static void *mouse_thread(void *arg) {
 		}
 		
 		if (!active) touchpad_wait();
-		else if (!info.edgex || !info.edgey) usleep(SLEEP_TIME);
-		else usleep(CORNER_SLEEP_TIME);
+		else if (!info.edgex || !info.edgey) usleep(sleep_time);
+		else usleep(CORNER_SLEEP_TIME(sleep_time));
 		
 		pthread_mutex_lock(&running_mutex);
 	}
@@ -259,6 +263,11 @@ static void print_help(int argc, char *argv[]) {
 				 "Change min_y");
 	print_option(long_options+i++, 'Y', "max_y", color,
 				 "Change max_y");
+	print_option(long_options+i++, 's', "sleep_time", color,
+				 "When edge motion is triggered, the mouse will move "
+				 "one pixel each sleep_time microseconds. The sleep time "
+				 "will be slightly longer when touching a corner. "
+				 "The default sleep time is "MACRO_TO_STR(DEFAULT_SLEEP_TIME));
 	print_option(long_options+i++, 'n', "name", color,
 				 "Specify the touchpad name");
 	print_option(long_options+i++, 'a', NULL, color,
@@ -324,7 +333,7 @@ static void print_help(int argc, char *argv[]) {
  */
 static int parse_args(int argc, char *argv[]) {
 	while (1) {
-		int opt = getopt_long(argc, argv, "t:x:X:y:Y:n:lavh", long_options, NULL);
+		int opt = getopt_long(argc, argv, "t:x:X:y:Y:s:n:lavh", long_options, NULL);
 		if (opt == -1) break;
 		
 		switch (opt) {
@@ -342,6 +351,9 @@ static int parse_args(int argc, char *argv[]) {
 			break;
 		case 'Y':
 			maxy = atoi(optarg);
+			break;
+		case 's':
+			sleep_time = atoi(optarg);
 			break;
 		case 'n':
 			device_name = optarg;

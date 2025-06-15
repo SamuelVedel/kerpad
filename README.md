@@ -84,6 +84,4 @@ This will display the coordinates on the touchpad while you touch it.
 
 ### Configure the mouse speed
 
-At the top of `src/main.c`, there are two macros: `SLEEP_TIME` and `CURSOR_SPEED`. While you are touching the edge of your touchpad, the mouse moves `CURSOR_SPEED` pixels every `SLEEP_TIME` microseconds (the sleep time is longer while touching a corner).
-
-You can change these macros if you want to adjust the mouse speed.
+When edge motion is triggered, the mouse will move one pixel each sleep time microseconds. By default, the sleep time is `3000`, but you can change it with the `-s` option. The sleep time is slightly longer when touching a corner.
