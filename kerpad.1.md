@@ -30,7 +30,7 @@ This program implements a customizable edge motion to make your mouse move autom
 │                                   │
 └───────────────────────────────────┘
 ```
-The above drawing represents you touchpad. When your  touchpad is pressed (or double-tapped), if your finger is between the two squares (at the edge of the touchpad), then this program will make the mouse move automatically. By  default, the edge limits are defined automatically in relation to your touchpad size and a default thickness (=250). If you don't like the default limits, you can use options to change the thickness or directly the limit values.
+The above drawing represents you touchpad. When your  touchpad is pressed (or double tapped), if your finger is between the two squares (at the edge of the touchpad), then this program will make the mouse move automatically. By  default, the edge limits are defined automatically in relation to your touchpad size and a default thickness (=250). If you don't like the default limits, you can use options to change the thickness or directly the limit values.
 
 # OPTIONS
 **-t** edge_thickness, **-\-thickness**=edge_thickness

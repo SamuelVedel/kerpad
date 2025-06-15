@@ -18,9 +18,9 @@ struct touchpad_info {
 	// -1: touching the top edge
 	//  1: touching the bottom edge
 	int edgey;
-	bool touching;
-	bool pressing;
-	bool double_touching;
+	bool touched;
+	bool pressed;
+	bool double_tapped;
 };
 typedef struct touchpad_info touchpad_info_t;
 

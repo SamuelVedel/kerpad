@@ -30,8 +30,8 @@
 #define PRESS_CODE BTN_MOUSE
 
 // delay max between to touch
-// to be a double touch
-#define DOUBLE_TOUCH_TIME 250
+// to be a double tap
+#define DOUBLE_TAP_TIME 250
 
 struct occured_events {
 	// values are ignored if < 0
@@ -284,18 +284,18 @@ static void applie_occured_events(struct occured_events *evt) {
 	if (evt->touched >= 0 &&
 		(evt->touched == 0 || dont_touch_borders()
 		 || touch_st.settings.no_edge_protection)) {
-		touch_st.info.touching = evt->touched;
-		if (evt->touched == 0) touch_st.info.double_touching = 0;
+		touch_st.info.touched = evt->touched;
+		if (evt->touched == 0) touch_st.info.double_tapped = 0;
 		if (evt->touched > 0) {
-			if (evt->touch_time-touch_st.last_touch_time < DOUBLE_TOUCH_TIME) {
-				// double touch detected
-				touch_st.info.double_touching = 1;
+			if (evt->touch_time-touch_st.last_touch_time < DOUBLE_TAP_TIME) {
+				// double tap detected
+				touch_st.info.double_tapped = 1;
 			}
 			touch_st.last_touch_time = evt->touch_time;
 		}
 	}
 	
-	if (evt->pressed >= 0) touch_st.info.pressing = evt->pressed;
+	if (evt->pressed >= 0) touch_st.info.pressed = evt->pressed;
 	pthread_mutex_unlock(&touch_st.mutex);
 	
 	if (evt->touched > 0 || evt->pressed > 0)

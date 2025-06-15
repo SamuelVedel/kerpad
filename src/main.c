@@ -58,7 +58,7 @@ static bool verbose = false;
 // edge motion will work while
 // touching the touchpad
 // else it will only work while pressing
-// or double touching it
+// or double tapping it
 static bool move_touched = false;
 
 static struct option long_options[] = {
@@ -140,8 +140,8 @@ static void *mouse_thread(void *arg) {
 		touchpad_info_t info = {};
 		touchpad_get_info(&info);
 		
-		bool active = (info.pressing || info.double_touching)
-			|| (move_touched && info.touching);
+		bool active = (info.pressed || info.double_tapped)
+			|| (move_touched && info.touched);
 		if (active) {
 			if (verbose) printf("x:%d y:%d\n", info.x, info.y);
 			
@@ -296,7 +296,7 @@ static void print_help(int argc, char *argv[]) {
 	
 	print_text_area(0, EXPLANATION_AREA_LEN,
 					"The above drawing represents you touchpad. "
-					"When your touchpad is pressed (or double-tapped), "
+					"When your touchpad is pressed (or double tapped), "
 					"if your finger is between the two squares (at "
 					"the edge of the touchpad), then this program "
 					"will make the mouse "
