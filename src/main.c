@@ -254,40 +254,40 @@ static void print_help(int argc, char *argv[]) {
 	int i = 0;
 	printf("Usage: %s [options]\n", argv[0]);
 	print_option(long_options+i++, 't', "edge_thickness", color,
-				 "Change the edge thickness");
+				 "Change the edge thickness.");
 	print_option(long_options+i++, 'x', "min_x", color,
-				 "Change min_x");
+				 "Change min_x.");
 	print_option(long_options+i++, 'X', "max_x", color,
-				 "Change max_x");
+				 "Change max_x.");
 	print_option(long_options+i++, 'y', "min_y", color,
-				 "Change min_y");
+				 "Change min_y.");
 	print_option(long_options+i++, 'Y', "max_y", color,
-				 "Change max_y");
+				 "Change max_y.");
 	print_option(long_options+i++, 's', "sleep_time", color,
 				 "When edge motion is triggered, the mouse will move "
 				 "one pixel each sleep_time microseconds. The sleep time "
 				 "will be slightly longer when touching a corner. "
-				 "The default sleep time is "MACRO_TO_STR(DEFAULT_SLEEP_TIME));
+				 "The default sleep time is "MACRO_TO_STR(DEFAULT_SLEEP_TIME)".");
 	print_option(long_options+i++, 'n', "name", color,
-				 "Specify the touchpad name");
+				 "Specify the touchpad name.");
 	print_option(long_options+i++, 'a', NULL, color,
 				 "Activate edge motion even "
-				 "when the touchpad is just touched");
+				 "when the touchpad is just touched.");
 	print_option(long_options+i++, 0, NULL, color,
-				 "Don't ignore touches made beyond the edge limits");
+				 "Don't ignore touches made beyond the edge limits.");
 	print_option(long_options+i++, 0, NULL, color,
-				 "Don't concider the touchpad pressed, when it is double tapped");
+				 "Don't concider the touchpad pressed, when it is double tapped.");
 	print_option(long_options+i++, 'l', "WHICH", color,
 				 "List caracteritics of input devices. WHICH value can be:\n"
 				 "- candidates: list only candidate devices (default value)\n"
 				 "- all: list all input devices");
 	print_option(long_options+i++, 'v', NULL, color,
 				 "Display coordinates while "
-				 "pressing the touchpad\n"
+				 "pressing the touchpad.\n"
 				 "If combine with -a, it will display the coordinates "
-				 "even when the touchpad is just touched");
+				 "even when the touchpad is just touched.");
 	print_option(long_options+i++, 'h', NULL, color,
-				 "Display this help and exit");
+				 "Display this help and exit.");
 	
 	printf("\n");
 	print_text_area(0, EXPLANATION_AREA_LEN,

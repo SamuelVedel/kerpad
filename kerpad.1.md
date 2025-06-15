@@ -34,34 +34,34 @@ The above drawing represents you touchpad. When your  touchpad is pressed (or do
 
 # OPTIONS
 **-t** edge_thickness, **-\-thickness**=edge_thickness
-: Change the edge thickness
+: Change the edge thickness.
 
 **-x** min_x, **-\-minx**=min_x
-: Change min_x
+: Change min_x.
 
 **-X** max_x, **-\-maxx**=max_x
-: Change max_x
+: Change max_x.
 
 **-y** min_y, **-\-miny**=min_y
-: Change min_y
+: Change min_y.
 
 **-Y** max_y, **-\-maxy**=max_y
-: Change max_y
+: Change max_y.
 
 **-s** sleep_time, **-\-sleep_time**=sleep_time
-: When edge motion is triggered, the mouse will move one pixel each sleep_time microseconds. The sleep time will be slightly longer when touching a corner. The default sleep time is 3000
+: When edge motion is triggered, the mouse will move one pixel each sleep_time microseconds. The sleep time will be slightly longer when touching a corner. The default sleep time is 3000.
 
 **-n** name, **-\-name**=name
-: Specify the touchpad name
+: Specify the touchpad name.
 
 **-a**, **-\-always**
-: Activate edge motion even when the touchpad is justed touched
+: Activate edge motion even when the touchpad is justed touched.
 
 **-\-no_edge_protection**
-: Don't ignore touches made beyond the edge limits
+: Don't ignore touches made beyond the edge limits.
 
 **-\-disable_double_tap**
-: Don't concider the touchpad pressed, when it is double tapped
+: Don't concider the touchpad pressed, when it is double tapped.
 
 **-l**, **-\-list**[=WHICH]
 : List caracteritics of input devices. WHICH value can be:
@@ -71,10 +71,10 @@ The above drawing represents you touchpad. When your  touchpad is pressed (or do
 > all: list all input devices
 
 **-v**, **-\-verbose**
-: Display coordinates while pressing the touchpad. If combine with **-a**, it will display the coordinates even when the touchpad is just touched, this is useful to configure to edge limits
+: Display coordinates while pressing the touchpad. If combine with **-a**, it will display the coordinates even when the touchpad is just touched, this is useful to configure to edge limits.
 
 **-h**, **-\-help**
-: Display an help and exit
+: Display an help and exit.
 
 # EXIT STATUS
 
