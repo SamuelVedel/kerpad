@@ -30,7 +30,7 @@ struct touchpad_settings {
 	char *device_name;
 	
 	// the below variables describe the limits
-	// on the touchpad after which it is concider
+	// on the touchpad after which it is considered
 	// beeing the edge
 	//
 	// if one of those value is negative,

@@ -63,7 +63,7 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 : Don't ignore touches made beyond the edge limits.
 
 **-\-disable_double_tap**
-: Don't concider the touchpad pressed, when it is double tapped.
+: Don't consider the touchpad pressed, when it is double tapped.
 
 **-l**, **-\-list**[=WHICH]
 : List caracteritics of input devices. WHICH value can be:

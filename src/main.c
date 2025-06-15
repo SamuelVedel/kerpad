@@ -276,7 +276,7 @@ static void print_help(int argc, char *argv[]) {
 	print_option(long_options+i++, 0, NULL, color,
 				 "Don't ignore touches made beyond the edge limits.");
 	print_option(long_options+i++, 0, NULL, color,
-				 "Don't concider the touchpad pressed, when it is double tapped.");
+				 "Don't consider the touchpad pressed, when it is double tapped.");
 	print_option(long_options+i++, 'l', "WHICH", color,
 				 "List caracteritics of input devices. WHICH value can be:\n"
 				 "- candidates: list only candidate devices (default value)\n"
