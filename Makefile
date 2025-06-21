@@ -8,6 +8,7 @@ SRC = src
 KERPAD_INSTALL = /usr/bin/kerpad
 SERVICE_INSTALL = /usr/lib/systemd/system/kerpad.service
 MAN_INSTALL = /usr/share/man/man1/kerpad.1.gz
+BASH_COMPLETION_INSTALL = /usr/share/bash-completion/completions/kerpad
 
 KERPAD_ARGS ?=
 
@@ -50,22 +51,27 @@ $(SERVICE_INSTALL): kerpad.service
 $(MAN_INSTALL): kerpad.1.gz
 	sudo cp $< $@
 
+$(BASH_COMPLETION_INSTALL): kerpad-completion.bash
+	sudo cp $< $@
+
 install_kerpad: $(KERPAD_INSTALL)
 install_service: $(SERVICE_INSTALL)
 install_man: $(MAN_INSTALL)
+install_bash_completion: $(BASH_COMPLETION_INSTALL)
 
 ifeq ($(PANDOC),)
-install: $(KERPAD_INSTALL) $(SERVICE_INSTALL)
+install: $(KERPAD_INSTALL) $(SERVICE_INSTALL) $(BASH_COMPLETION_INSTALL)
 else
-install: $(KERPAD_INSTALL) $(SERVICE_INSTALL) $(MAN_INSTALL)
+install: $(KERPAD_INSTALL) $(SERVICE_INSTALL) $(BASH_COMPLETION_INSTALL) $(MAN_INSTALL)
 endif
 
 uninstall:
 	sudo rm -f $(KERPAD_INSTALL)
 	sudo rm -f $(SERVICE_INSTALL)
 	sudo rm -f $(MAN_INSTALL)
+	sudo rm -f $(BASH_COMPLETION_INSTALL)
 
 clean:
 	rm -f $(OUT)/* kerpad kerpad.service *~ */*~ kerpad.1 kerpad.1.gz
 
-.PHONY: all clean install uninstall install_kerpad install_service install_man
+.PHONY: all clean install uninstall install_kerpad install_service install_man install_bash_completion

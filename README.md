@@ -50,7 +50,7 @@ make install
 sudo systemctl daemon-reload
 sudo systemctl enable kerpad.service
 ```
-This will install and enable a systemd service for Kerpad. `make install` will also intall the `kerpad` command and the man page if you have pandoc installed.
+This will install and enable a systemd service for Kerpad. `make install` will also intall the `kerpad` command, the bash completion script and the man page if you have pandoc installed.
 
 If you want to use additional `kerpad` options for the service, you can do:
 ```
