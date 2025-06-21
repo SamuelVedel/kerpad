@@ -64,21 +64,24 @@ struct touchpad_resemblance {
 };
 typedef struct touchpad_resemblance touchpad_resemblance_t;
 
-#define TR_HAS_NAME_IN_TOUCHPAD(tr) ((tr).flags&1)
-#define TR_HAS_ABS(tr) ((tr).flags&(1<<1))
-#define TR_HAS_XY(tr) ((tr).flags&(1<<2))
-#define TR_HAS_MT(tr) ((tr).flags&(1<<3))
-#define TR_HAS_KEY(tr) ((tr).flags&(1<<4))
-#define TR_HAS_TOUCH(tr) ((tr).flags&(1<<5))
-#define TR_HAS_PRESS(tr) ((tr).flags&(1<<6))
+#define GET_BIT(var, bit) (var&(1<<bit))
+#define SET_BIT(var, bit, val) if (val) var |= (1<<bit); else var &= ~(1<<bit);
 
-#define TR_SET_NAME_IN_TOUCHPAD(tr, v) if (v) (tr).flags |= 1; else (tr).flags &= ~1;
-#define TR_SET_ABS(tr, v) if (v) (tr).flags |= (1<<1); else (tr).flags &= ~(1<<1);
-#define TR_SET_XY(tr, v) if (v) (tr).flags |= (1<<2); else (tr).flags &= ~(1<<2);
-#define TR_SET_MT(tr, v) if (v) (tr).flags |= (1<<3); else (tr).flags &= ~(1<<3);
-#define TR_SET_KEY(tr, v) if (v) (tr).flags |= (1<<4); else (tr).flags &= ~(1<<4);
-#define TR_SET_TOUCH(tr, v) if (v) (tr).flags |= (1<<5); else (tr).flags &= ~(1<<5);
-#define TR_SET_PRESS(tr, v) if (v) (tr).flags |= (1<<6); else (tr).flags &= ~(1<<6);
+#define TR_HAS_NAME_IN_TOUCHPAD(tr) GET_BIT((tr).flags, 0)
+#define TR_HAS_ABS(tr) GET_BIT((tr).flags, 1)
+#define TR_HAS_XY(tr) GET_BIT((tr).flags, 2)
+#define TR_HAS_MT(tr) GET_BIT((tr).flags, 3)
+#define TR_HAS_KEY(tr) GET_BIT((tr).flags, 4)
+#define TR_HAS_TOUCH(tr) GET_BIT((tr).flags, 5)
+#define TR_HAS_PRESS(tr) GET_BIT((tr).flags, 6)
+
+#define TR_SET_NAME_IN_TOUCHPAD(tr, v) SET_BIT((tr).flags, 0, v)
+#define TR_SET_ABS(tr, v) SET_BIT((tr).flags, 1, v)
+#define TR_SET_XY(tr, v) SET_BIT((tr).flags, 2, v)
+#define TR_SET_MT(tr, v) SET_BIT((tr).flags, 3, v)
+#define TR_SET_KEY(tr, v) SET_BIT((tr).flags, 4, v)
+#define TR_SET_TOUCH(tr, v) SET_BIT((tr).flags, 5, v)
+#define TR_SET_PRESS(tr, v) SET_BIT((tr).flags, 6, v)
 
 #define TR_GET_MARK(tr) ((2*TR_HAS_NAME_IN_TOUCHPAD(tr)\
 						  +2*TR_HAS_XY(tr)+TR_HAS_MT(tr)+2*TR_HAS_PRESS(tr))\
