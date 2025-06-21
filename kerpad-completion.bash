@@ -35,14 +35,18 @@ _kerpad_short_opt_completions() {
 }
 
 _kerpad_completions() {
-	local cur prev words cword was_split comp_args
-	_comp_initialize -s -- "$@" || return
+	# local cur prev words cword was_split comp_args
+	# _comp_initialize -s -- "$@" || return
 	
-	if [[ ${prev} == --list ]]
-	then
-		_comp_compgen -- -W 'candidates all'
-		return 0
-	fi
+	# if [[ ${prev} == --list ]]
+	# then
+	# 	_comp_compgen -- -W 'candidates all'
+	# 	return 0
+	# fi
+	local cur prev opts
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
 	
 	if [[ $cur == --* ]]
 	then
