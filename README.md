@@ -42,6 +42,10 @@ By default, this program will try to find the device that looks the most like a 
 sudo ./kerpad -n <device_name>
 ```
 
+### Edge scrolling
+
+Kerpad also provide edge scrolling. Edge scrolling makes the touchpad scroll when your moving your finger at the edge of it. It is disable by default, but you can enable it with the `--edge-scroll` option. You can select with this option which side is used for scrolling, see `kerpad --help` or `man kerpad` for more details.
+
 ### Make it run at boot time
 
 If you want this program to run at system boot, you can run:
@@ -73,15 +77,23 @@ make uninstall
 
 The edge limits are the boundaries on the touchpad beyond which the mouse will start to move automatically. By default, those limits are determined by the dimensions of the detected device. However, if you don't like the default values, you can easily change the edge thickness or directly set the limit values using `kerpad` options. See:
 ```
-./kerpad -h
+kerpad -h
+```
+or
+```
+man kerpad
 ```
 
 To determine which edge limits work best for you, you can run:
 ```
-sudo ./kerpad -va
+sudo kerpad -va
 ```
 This will display the coordinates on the touchpad while you touch it.
 
 ### Configure the mouse speed
 
 When edge motion is triggered, the mouse will move one pixel each sleep time microseconds. By default, the sleep time is `3000`, but you can change it with the `-s` option. The sleep time is slightly longer when touching a corner.
+
+### Configure the scroll speed
+
+When edge scrolling is applied, the number of detents is diveded by a value. To configure the scroll speed you can change this value with the `--scroll-div` option, if the value is lower, the scoll will be faster and if the value is higher, the scroll will be slower.
