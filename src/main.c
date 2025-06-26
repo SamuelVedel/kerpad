@@ -369,7 +369,7 @@ static void print_help(int argc, char *argv[]) {
 				 MACRO_TO_STR(DEFAULT_SCROLL_DIV)
 				 ". A negative value can be given to reverse the scroll direction.");
 	print_option(long_options+i++, 'l', "WHICH", color,
-				 "List caracteritics of input devices. WHICH value can be:\n"
+				 "List characteristics of input devices. WHICH value can be:\n"
 				 "- candidates: list only candidate devices (default value)\n"
 				 "- all: list all input devices");
 	print_option(long_options+i++, 'v', NULL, color,

@@ -57,7 +57,7 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 : Specify the touchpad name.
 
 **-a**, **-\-always**
-: Activate edge motion even when the touchpad is justed touched.
+: Activate edge motion even when the touchpad is just touched.
 
 **-\-no-edge-protection**
 : Don't ignore touches made beyond the edge limits.
@@ -78,7 +78,7 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 : When edge scrolling is applied, the number of detents is divided by DIV, so you can configure the scrolling speed by changing DIV. DIV default value is 50. A negative value can be given to reverse the scroll direction.
 
 **-l**, **-\-list**[=WHICH]
-: List caracteritics of input devices. WHICH value can be:
+: List characteristics of input devices. WHICH value can be:
 
 > candidates: list only candidate devices (default value)
 
@@ -88,14 +88,14 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 : Display coordinates while pressing the touchpad. If combine with **-a**, it will display the coordinates even when the touchpad is just touched, this is useful to configure the edge limits.
 
 **-h**, **-\-help**
-: Display an help and exit.
+: Display a help and exit.
 
 # EXIT STATUS
 
 The following exit values shall be returned:
 
 0
-: The program worked correclty.
+: The program worked correctly.
 
 \>0
 : An error occurred.
