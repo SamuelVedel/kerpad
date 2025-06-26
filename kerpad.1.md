@@ -50,7 +50,7 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 **-Y** max_y, **-\-maxy**=max_y
 : Change max_y.
 
-**-s** sleep_time, **-\-sleep_time**=sleep_time
+**-s** sleep_time, **-\-sleep-time**=sleep_time
 : When edge motion is triggered, the mouse will move one pixel each sleep_time microseconds. The sleep time will be slightly longer when touching a corner. The default sleep time is 3000.
 
 **-n** name, **-\-name**=name
@@ -59,11 +59,11 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 **-a**, **-\-always**
 : Activate edge motion even when the touchpad is justed touched.
 
-**-\-no_edge_protection**
+**-\-no-edge-protection**
 : Don't ignore touches made beyond the edge limits.
 
-**-\-disable_double_tap**
-: Don't consider the touchpad pressed, when it is double tapped.
+**-\-disable-double-tap**
+: Don't consider the touchpad pressed when it is double tapped.
 
 **-l**, **-\-list**[=WHICH]
 : List caracteritics of input devices. WHICH value can be:
@@ -73,7 +73,7 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 > all: list all input devices
 
 **-v**, **-\-verbose**
-: Display coordinates while pressing the touchpad. If combine with **-a**, it will display the coordinates even when the touchpad is just touched, this is useful to configure to edge limits.
+: Display coordinates while pressing the touchpad. If combine with **-a**, it will display the coordinates even when the touchpad is just touched, this is useful to configure the edge limits.
 
 **-h**, **-\-help**
 : Display an help and exit.

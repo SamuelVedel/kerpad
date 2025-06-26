@@ -3,7 +3,7 @@ _kerpad_long_opt_completions() {
 	COMPREPLY=()
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD-1]}"
-	long_opts="--thickness= --minx=  --maxx= --miny= --maxy= --sleep_time= --name= --always --no_edge_protection --disable_double_tap --list= --verbose --help"
+	long_opts="--thickness= --minx=  --maxx= --miny= --maxy= --sleep-time= --name= --always --no-edge-protection --disable-double-tap --list= --verbose --help"
 
 	if [[ ${prev} == "--list*" ]]
 	then

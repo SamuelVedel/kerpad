@@ -77,12 +77,12 @@ static struct option long_options[] = {
 	{"miny", required_argument, NULL, 'y'},
 	{"maxy", required_argument, NULL, 'Y'},
 	
-	{"sleep_time", required_argument, NULL, 's'},
+	{"sleep-time", required_argument, NULL, 's'},
 	
 	{"name", required_argument, NULL, 'n'},
 	{"always", no_argument, NULL, 'a'},
-	{"no_edge_protection", no_argument, NULL, NO_EDGE_PROTECTION_OPTION},
-	{"disable_double_tap", no_argument, NULL, DISABLE_DOUBLE_TAP_OPTION},
+	{"no-edge-protection", no_argument, NULL, NO_EDGE_PROTECTION_OPTION},
+	{"disable-double-tap", no_argument, NULL, DISABLE_DOUBLE_TAP_OPTION},
 	{"list", optional_argument, NULL, 'l'},
 	{"verbose", no_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
