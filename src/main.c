@@ -18,7 +18,7 @@
 #define CURSOR_SPEED 1
 
 #define DEFAULT_SCROLL_SLEEP_TIME 5000
-#define DEFAULT_SCROLL_DIV 40
+#define DEFAULT_SCROLL_DIV 50
 
 // ANSI escapes
 #define WHITE        "\e[00m"
