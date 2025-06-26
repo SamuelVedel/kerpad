@@ -65,14 +65,17 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 **-\-disable-double-tap**
 : Don't consider the touchpad pressed when it is double tapped.
 
-**--edge-scrolling**[=TYPE]
-: Enable edge scrolling. TYPE value can be:
+**-\-edge-scrolling**[=TYPE]
+: Enable edge scrolling. It is not recommended to use this option with the **-\-no-edge-protection** option. TYPE value can be:
 
 > both: scroll with both left and right edge
 
 > right: scroll with right edge (default value)
 
 > left: scroll with left edge
+
+**-\-scroll-div**=DIV
+: When edge scrolling is applied, the number of detents is divided by DIV, so you can configure the scrolling speed by changing DIV. DIV default value is 40. A negative value can be given to reverse the scroll direction.
 
 **-l**, **-\-list**[=WHICH]
 : List caracteritics of input devices. WHICH value can be:

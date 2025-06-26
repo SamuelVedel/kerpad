@@ -18,6 +18,7 @@
 #define CURSOR_SPEED 1
 
 #define DEFAULT_SCROLL_SLEEP_TIME 5000
+#define DEFAULT_SCROLL_DIV 40
 
 // ANSI escapes
 #define WHITE        "\e[00m"
@@ -34,6 +35,7 @@
 #define NO_EDGE_PROTECTION_OPTION 1
 #define DISABLE_DOUBLE_TAP_OPTION 2
 #define EDGE_SCROLLING_OPTION     3
+#define SCROLL_DIV_OPTION         4
 
 static bool running = true;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -68,7 +70,7 @@ static bool verbose = false;
 
 // When edge scrolling is applied
 // the scrolling value will be devided by this variable
-static int scroll_div = 20;
+static int scroll_div = DEFAULT_SCROLL_DIV;
 
 static bool left_edge_scrolling = false;
 static bool right_edge_scrolling = false;
@@ -98,6 +100,7 @@ static struct option long_options[] = {
 	{"no-edge-protection", no_argument, NULL, NO_EDGE_PROTECTION_OPTION},
 	{"disable-double-tap", no_argument, NULL, DISABLE_DOUBLE_TAP_OPTION},
 	{"edge-scrolling", optional_argument, NULL, EDGE_SCROLLING_OPTION},
+	{"scroll-div", required_argument, NULL, SCROLL_DIV_OPTION},
 	{"list", optional_argument, NULL, 'l'},
 	{"verbose", no_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
@@ -359,6 +362,12 @@ static void print_help(int argc, char *argv[]) {
 				  " - both: scroll with both left and right edge\n"
 				  " - right: scroll with right edge (default value)\n"
 				  " - left: scroll with left edge");
+	print_option(long_options+i++, 0, "DIV", color,
+				 "When edge scrolling is applied, the number of detents "
+				 "is divided by DIV, so you can configure the scrolling speed "
+				 "by changing DIV. DIV default value is "
+				 MACRO_TO_STR(DEFAULT_SCROLL_DIV)
+				 ". A negative value can be given to reverse the scroll direction.");
 	print_option(long_options+i++, 'l', "WHICH", color,
 				 "List caracteritics of input devices. WHICH value can be:\n"
 				 "- candidates: list only candidate devices (default value)\n"
@@ -463,6 +472,9 @@ static int parse_args(int argc, char *argv[]) {
 				print_help(argc, argv);
 				return -1;
 			}
+			break;
+		case SCROLL_DIV_OPTION:
+			scroll_div = atoi(optarg);
 			break;
 		case 'l':
 			if (!optarg || !strcmp(optarg, "candidates")) {
