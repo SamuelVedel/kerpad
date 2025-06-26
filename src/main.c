@@ -34,6 +34,9 @@
 static bool running = true;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static mouse_t *mouse = NULL;
+static touchpad_t *touchpad = NULL;
+
 static int minx = -1;
 static int miny = -1;
 
@@ -129,11 +132,11 @@ static void *touchpad_thread(void *arg) {
 	pthread_mutex_lock(&running_mutex);
 	while (running) {
 		pthread_mutex_unlock(&running_mutex);
-		touchpad_read_next_event();
+		touchpad_read_next_event(touchpad);
 		pthread_mutex_lock(&running_mutex);
 	}
 	pthread_mutex_unlock(&running_mutex);
-	touchpad_signal();
+	touchpad_signal(touchpad);
 	
 	return NULL;
 }
@@ -145,7 +148,7 @@ static void *mouse_thread(void *arg) {
 	while (running) {
 		pthread_mutex_unlock(&running_mutex);
 		touchpad_info_t info = {};
-		touchpad_get_info(&info);
+		touchpad_get_info(touchpad, &info);
 		
 		bool active = info.pressed
 			|| (!disable_double_tap && info.double_tapped)
@@ -154,15 +157,15 @@ static void *mouse_thread(void *arg) {
 			if (verbose) printf("x:%d y:%d\n", info.x, info.y);
 			
 			if (info.edgex && info.edgey) {
-				mouse_move(info.edgex*CURSOR_SPEED, info.edgey*CURSOR_SPEED);
+				mouse_move(mouse, info.edgex*CURSOR_SPEED, info.edgey*CURSOR_SPEED);
 			} else if (info.edgex) {
-				mouse_move_x(info.edgex*CURSOR_SPEED);
+				mouse_move_x(mouse, info.edgex*CURSOR_SPEED);
 			} else if (info.edgey) {
-				mouse_move_y(info.edgey*CURSOR_SPEED);
+				mouse_move_y(mouse, info.edgey*CURSOR_SPEED);
 			}
 		}
 		
-		if (!active) touchpad_wait();
+		if (!active) touchpad_wait(touchpad);
 		else if (!info.edgex || !info.edgey) usleep(sleep_time);
 		else usleep(CORNER_SLEEP_TIME(sleep_time));
 		
@@ -416,14 +419,15 @@ int main(int argc, char *argv[]) {
 		.no_edge_protection = no_edge_protection,
 		.list = list,
 	};
-	if (touchpad_init(&settings) < 0) {
+	touchpad = touchpad_init(&settings);
+	if (touchpad == NULL) {
 		return EXIT_FAILURE;
 	}
 	if (list != LIST_NO) {
-		touchpad_clean();
+		touchpad_clean(touchpad);
 		return EXIT_SUCCESS;
 	}
-	mouse_init();
+	mouse = mouse_init("Kerpad Mouse");
 	
 	init_sighanlder();
 	unblock_sigint();
@@ -437,8 +441,8 @@ int main(int argc, char *argv[]) {
 	pthread_join(touchap_th, NULL);
 	pthread_join(mouse_th, NULL);
 	
-	touchpad_clean();
-	mouse_clean();
+	touchpad_clean(touchpad);
+	mouse_clean(mouse);
 	
 	return EXIT_SUCCESS;
 }

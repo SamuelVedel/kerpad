@@ -9,6 +9,8 @@
 #define LIST_CANDIDATES 1
 #define LIST_ALL 2
 
+typedef struct touchpad touchpad_t;
+
 struct touchpad_info {
 	int x;
 	int y;
@@ -66,36 +68,36 @@ typedef struct touchpad_settings touchpad_settings_t;
  * Init the needed things for touchpad
  * event polling
  *
- * Return a negative value if no touchpad
+ * Return a NULL if no touchpad
  * is found
  */
-int touchpad_init(touchpad_settings_t *settings);
+touchpad_t *touchpad_init(touchpad_settings_t *settings);
 
 /**
  * Clean the touchpad event polling
  */
-void touchpad_clean();
+void touchpad_clean(touchpad_t *touchpad);
 
 /**
  * Read the next touchpad event
  */
-void touchpad_read_next_event();
+void touchpad_read_next_event(touchpad_t *touchpad);
 
 /**
  * Write informations about
  * the touchpad
  */
-void touchpad_get_info(touchpad_info_t *info);
+void touchpad_get_info(touchpad_t *touchpad, touchpad_info_t *info);
 
 /**
  * Wait for the touchpad to be touched or pressed
  */
-void touchpad_wait();
+void touchpad_wait(touchpad_t *touchpad);
 
 /**
  * Signal a thread waiting for the touchap
  * to be touched or pressed
  */
-void touchpad_signal();
+void touchpad_signal(touchpad_t *touchpad);
 
 #endif // !__TOUCHPAD_H__

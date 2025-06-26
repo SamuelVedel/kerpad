@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "touchpad.h"
 #include "util.h"
@@ -42,7 +43,7 @@ struct occured_events {
 	unsigned long touch_time;
 };
 
-struct touchpad_struct {
+struct touchpad {
 	touchpad_settings_t settings;
 	int fd;
 	pthread_mutex_t mutex;
@@ -50,12 +51,6 @@ struct touchpad_struct {
 	unsigned long last_touch_time;
 	struct occured_events occured;
 	touchpad_info_t info;
-};
-
-static struct touchpad_struct touch_st = {
-	.fd = -1,
-	.mutex = PTHREAD_MUTEX_INITIALIZER,
-	.cond = PTHREAD_COND_INITIALIZER
 };
 
 struct touchpad_resemblance {
@@ -227,13 +222,13 @@ static void reset_occured_events(struct occured_events *evt) {
 	evt->pressed = -1;
 }
 
-static void init_edge_limits() {
+static void init_edge_limits(touchpad_t *touchpad) {
 	struct input_absinfo xlimits = {};
-	exitif(ioctl(touch_st.fd, EVIOCGABS(ABS_X), &xlimits) == -1, "ioctl get x limits");
+	exitif(ioctl(touchpad->fd, EVIOCGABS(ABS_X), &xlimits) == -1, "ioctl get x limits");
 	struct input_absinfo ylimits = {};
-	exitif(ioctl(touch_st.fd, EVIOCGABS(ABS_Y), &ylimits) == -1, "ioctl get y limits");
+	exitif(ioctl(touchpad->fd, EVIOCGABS(ABS_Y), &ylimits) == -1, "ioctl get y limits");
 	
-	touchpad_settings_t *ts = &touch_st.settings;
+	touchpad_settings_t *ts = &touchpad->settings;
 	if (ts->edge_thickness < 0) ts->edge_thickness = DEFAULT_EDGE_THICKNESS;
 	if (ts->minx < 0) ts->minx = xlimits.minimum+ts->edge_thickness;
 	if (ts->maxx < 0) ts->maxx = xlimits.maximum-ts->edge_thickness;
@@ -241,120 +236,126 @@ static void init_edge_limits() {
 	if (ts->maxy < 0) ts->maxy = ylimits.maximum-ts->edge_thickness;
 }
 
-int touchpad_init(touchpad_settings_t *settings) {
+touchpad_t *touchpad_init(touchpad_settings_t *settings) {
 	int fd = get_touchpad(settings->device_name, settings->list);
-	if (fd < 0) return -1;
+	if (fd < 0) return NULL;
 	
-	touch_st.fd = fd;
-	touch_st.settings = *settings;
-	reset_occured_events(&touch_st.occured);
-	init_edge_limits();
-	return 0;
+	touchpad_t *touchpad = malloc(sizeof(*touchpad));
+	touchpad->fd = fd;
+	touchpad->settings = *settings;
+	pthread_mutex_init(&touchpad->mutex, NULL);
+	pthread_cond_init(&touchpad->cond, NULL);
+	reset_occured_events(&touchpad->occured);
+	init_edge_limits(touchpad);
+	return touchpad;
 }
 
 /**
  * Return false if the touchpad coordinates are
  * beyond the borders defined in the settings
  */
-static int dont_touch_borders() {
-	int x = touch_st.info.x;
-	int y = touch_st.info.y;
-	return x >= touch_st.settings.minx
-		&& x <= touch_st.settings.maxx
-		&& y >= touch_st.settings.miny
-		&& y <= touch_st.settings.maxy;
+static int dont_touch_borders(touchpad_t *touchpad) {
+	int x = touchpad->info.x;
+	int y = touchpad->info.y;
+	return x >= touchpad->settings.minx
+		&& x <= touchpad->settings.maxx
+		&& y >= touchpad->settings.miny
+		&& y <= touchpad->settings.maxy;
 }
 
-static void applie_occured_events(struct occured_events *evt) {
-	pthread_mutex_lock(&touch_st.mutex);
+static void applie_occured_events(touchpad_t *touchpad) {
+	pthread_mutex_lock(&touchpad->mutex);
+	struct occured_events *evt = &touchpad->occured;
 	if (evt->x >= 0) {
-		touch_st.info.x = evt->x;
-		if (evt->x <= touch_st.settings.minx)
-			touch_st.info.edgex = -1;
-		else if (evt->x >= touch_st.settings.maxx)
-			touch_st.info.edgex = 1;
-		else touch_st.info.edgex = 0;
+		touchpad->info.x = evt->x;
+		if (evt->x <= touchpad->settings.minx)
+			touchpad->info.edgex = -1;
+		else if (evt->x >= touchpad->settings.maxx)
+			touchpad->info.edgex = 1;
+		else touchpad->info.edgex = 0;
 	}
 	if (evt->y >= 0) {
-		touch_st.info.y = evt->y;
-		if (evt->y <= touch_st.settings.miny)
-			touch_st.info.edgey = -1;
-		else if (evt->y >= touch_st.settings.maxy)
-			touch_st.info.edgey = 1;
-		else touch_st.info.edgey = 0;
+		touchpad->info.y = evt->y;
+		if (evt->y <= touchpad->settings.miny)
+			touchpad->info.edgey = -1;
+		else if (evt->y >= touchpad->settings.maxy)
+			touchpad->info.edgey = 1;
+		else touchpad->info.edgey = 0;
 	}
 	
 	if (evt->touched >= 0 &&
-		(evt->touched == 0 || dont_touch_borders()
-		 || touch_st.settings.no_edge_protection)) {
-		touch_st.info.touched = evt->touched;
-		if (evt->touched == 0) touch_st.info.double_tapped = 0;
+		(evt->touched == 0 || dont_touch_borders(touchpad)
+		 || touchpad->settings.no_edge_protection)) {
+		touchpad->info.touched = evt->touched;
+		if (evt->touched == 0) touchpad->info.double_tapped = 0;
 		if (evt->touched > 0) {
-			if (evt->touch_time-touch_st.last_touch_time < DOUBLE_TAP_TIME) {
+			if (evt->touch_time-touchpad->last_touch_time < DOUBLE_TAP_TIME) {
 				// double tap detected
-				touch_st.info.double_tapped = 1;
+				touchpad->info.double_tapped = 1;
 			}
-			touch_st.last_touch_time = evt->touch_time;
+			touchpad->last_touch_time = evt->touch_time;
 		}
 	}
 	
-	if (evt->pressed >= 0) touch_st.info.pressed = evt->pressed;
-	pthread_mutex_unlock(&touch_st.mutex);
+	if (evt->pressed >= 0) touchpad->info.pressed = evt->pressed;
+	pthread_mutex_unlock(&touchpad->mutex);
 	
 	if (evt->touched > 0 || evt->pressed > 0)
-		pthread_cond_signal(&touch_st.cond);
+		pthread_cond_signal(&touchpad->cond);
 }
 
-void touchpad_read_next_event() {
+void touchpad_read_next_event(touchpad_t *touchpad) {
 	struct input_event event = {};
 	
-	exitif(read(touch_st.fd, &event, sizeof(event)) == -1,
+	exitif(read(touchpad->fd, &event, sizeof(event)) == -1,
 		   "cannot read from the touchpad event file");
 	//printf("%d %d %d\n", event.type, event.code, event.value);
 	if (event.type == EV_SYN) {
-		applie_occured_events(&touch_st.occured);
-		reset_occured_events(&touch_st.occured);
+		applie_occured_events(touchpad);
+		reset_occured_events(&touchpad->occured);
 	} else if (event.type == EV_KEY) {
 		switch (event.code) {
 		case TOUCH_CODE: // touched
-			touch_st.occured.touched = event.value;
+			touchpad->occured.touched = event.value;
 			if (event.value)
-				touch_st.occured.touch_time = EVENT_TIME_MILLI(event);
+				touchpad->occured.touch_time = EVENT_TIME_MILLI(event);
 			break;
 		case PRESS_CODE: // pressed
-			touch_st.occured.pressed = event.value;
+			touchpad->occured.pressed = event.value;
 			break;
 		}
 	} else if (event.type == EV_ABS) {
 		// moved
 		switch (event.code) {
 		case ABS_X:
-			touch_st.occured.x = event.value;
+			touchpad->occured.x = event.value;
 			break;
 		case ABS_Y:
-			touch_st.occured.y = event.value;
+			touchpad->occured.y = event.value;
 			break;
 		}
 	}
 }
 
-void touchpad_get_info(touchpad_info_t *info) {
-	pthread_mutex_lock(&touch_st.mutex);
-	*info = touch_st.info;
-	pthread_mutex_unlock(&touch_st.mutex);
+void touchpad_get_info(touchpad_t *touchpad, touchpad_info_t *info) {
+	pthread_mutex_lock(&touchpad->mutex);
+	*info = touchpad->info;
+	pthread_mutex_unlock(&touchpad->mutex);
 }
 
-void touchpad_wait() {
-	pthread_mutex_lock(&touch_st.mutex);
-	pthread_cond_wait(&touch_st.cond, &touch_st.mutex);
-	pthread_mutex_unlock(&touch_st.mutex);
+void touchpad_wait(touchpad_t *touchpad) {
+	pthread_mutex_lock(&touchpad->mutex);
+	pthread_cond_wait(&touchpad->cond, &touchpad->mutex);
+	pthread_mutex_unlock(&touchpad->mutex);
 }
 
-void touchpad_signal() {
-	pthread_cond_signal(&touch_st.cond);
+void touchpad_signal(touchpad_t *touchpad) {
+	pthread_cond_signal(&touchpad->cond);
 }
 
-void touchpad_clean() {
-	if (touch_st.fd == -1) return;
-	exitif(close(touch_st.fd) == -1, "cannot close the touchpad event file");
+void touchpad_clean(touchpad_t *touchpad) {
+	if (touchpad->fd == -1) return; // should not append
+	exitif(close(touchpad->fd) == -1, "cannot close the touchpad event file");
+	pthread_mutex_destroy(&touchpad->mutex);
+	pthread_cond_destroy(&touchpad->cond);
 }
