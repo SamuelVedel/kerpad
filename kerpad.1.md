@@ -65,6 +65,15 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 **-\-disable-double-tap**
 : Don't consider the touchpad pressed when it is double tapped.
 
+**--edge-scrolling**[=TYPE]
+: Enable edge scrolling. TYPE value can be:
+
+> both: scroll with both left and right edge
+
+> right: scroll with right edge (default value)
+
+> left: scroll with left edge
+
 **-l**, **-\-list**[=WHICH]
 : List caracteritics of input devices. WHICH value can be:
 

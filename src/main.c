@@ -17,9 +17,12 @@
 #define CORNER_SLEEP_TIME(time) (time*1414/1000)
 #define CURSOR_SPEED 1
 
+#define DEFAULT_SCROLL_SLEEP_TIME 5000
+
 // ANSI escapes
 #define WHITE        "\e[00m"
 #define WHITE_BOLD   "\e[00;01m"
+#define ANSI_WB(str) WHITE_BOLD str WHITE
 
 #define TO_STR(x) #x
 #define MACRO_TO_STR(x) TO_STR(x)
@@ -30,6 +33,7 @@
 
 #define NO_EDGE_PROTECTION_OPTION 1
 #define DISABLE_DOUBLE_TAP_OPTION 2
+#define EDGE_SCROLLING_OPTION     3
 
 static bool running = true;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -46,6 +50,7 @@ static int maxy = -1;
 static int edge_thickness = -1;
 
 static int sleep_time = DEFAULT_SLEEP_TIME;
+static int scroll_sleep_time = DEFAULT_SCROLL_SLEEP_TIME;
 
 static bool no_edge_protection = false;
 static bool disable_double_tap = false;
@@ -60,6 +65,15 @@ static char *device_name = NULL;
 // if non null,
 // it will display coordinates
 static bool verbose = false;
+
+// When edge scrolling is applied
+// the scrolling value will be devided by this variable
+static int scroll_div = 20;
+
+static bool left_edge_scrolling = false;
+static bool right_edge_scrolling = false;
+//static bool top_edge_scrolling = false;
+//static bool bottom_edge_scrolling = false;
 
 // if non null,
 // edge motion will work while
@@ -83,6 +97,7 @@ static struct option long_options[] = {
 	{"always", no_argument, NULL, 'a'},
 	{"no-edge-protection", no_argument, NULL, NO_EDGE_PROTECTION_OPTION},
 	{"disable-double-tap", no_argument, NULL, DISABLE_DOUBLE_TAP_OPTION},
+	{"edge-scrolling", optional_argument, NULL, EDGE_SCROLLING_OPTION},
 	{"list", optional_argument, NULL, 'l'},
 	{"verbose", no_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
@@ -126,7 +141,10 @@ static void init_sighanlder() {
 			"error on sigaction");
 }
 
-static void *touchpad_thread(void *arg) {
+/**
+ * Thread responsible for listening to touchpad events
+ */
+static void *touchpad_listening_thread(void *arg) {
 	UNUSED(arg);
 	
 	pthread_mutex_lock(&running_mutex);
@@ -136,12 +154,17 @@ static void *touchpad_thread(void *arg) {
 		pthread_mutex_lock(&running_mutex);
 	}
 	pthread_mutex_unlock(&running_mutex);
-	touchpad_signal(touchpad);
+	touchpad_signal_touch(touchpad);
+	touchpad_signal_press(touchpad);
+	touchpad_signal_edge_touch(touchpad);
 	
 	return NULL;
 }
 
-static void *mouse_thread(void *arg) {
+/**
+ * Touchpad responsible for taking care of edge motion
+ */
+static void *edge_motion_thread(void *arg) {
 	UNUSED(arg);
 	
 	pthread_mutex_lock(&running_mutex);
@@ -165,9 +188,60 @@ static void *mouse_thread(void *arg) {
 			}
 		}
 		
-		if (!active) touchpad_wait(touchpad);
-		else if (!info.edgex || !info.edgey) usleep(sleep_time);
+		if (!active) {
+			if (!move_touched) touchpad_wait_press(touchpad);
+			else touchpad_wait_touch_or_press(touchpad);
+		} else if (!info.edgex || !info.edgey) usleep(sleep_time);
 		else usleep(CORNER_SLEEP_TIME(sleep_time));
+		
+		pthread_mutex_lock(&running_mutex);
+	}
+	pthread_mutex_unlock(&running_mutex);
+	
+	return NULL;
+}
+
+static void *edge_scrolling_thread(void *arg) {
+	UNUSED(arg);
+	
+	//int last_x = -1;
+	int last_y = -1;
+	
+	pthread_mutex_lock(&running_mutex);
+	while (running) {
+		pthread_mutex_unlock(&running_mutex);
+		touchpad_info_t info = {};
+		touchpad_get_info(touchpad, &info);
+		
+		bool active = info.edge_touched;
+		if (active) {
+			//if (last_x < 0) last_x = info.x;
+			if (last_y < 0) last_y = info.y;
+			
+			if ((left_edge_scrolling && info.edgex < 0)
+				|| (right_edge_scrolling && info.edgex > 0)) {
+				// scroll y
+				int diff = info.y-last_y;
+				if (diff) {
+					//printf("%d\n", diff);
+					mouse_scroll_y(mouse, diff*120/scroll_div);
+				}
+			} /*else if ((top_edge_scrolling && info.edgey < 0)
+				|| (bottom_edge_scrolling && info.edgey > 0)) {
+				// scroll x
+				int diff = info.x-last_x;
+				if (diff) mouse_scroll_x(mouse, diff);
+				}*/
+			
+			//last_x = info.x;
+			last_y = info.y;
+		}
+		
+		if (!active) {
+			// last_x = -1;
+			last_y = -1;
+			touchpad_wait_edge_touch(touchpad);
+		} else usleep(scroll_sleep_time);
 		
 		pthread_mutex_lock(&running_mutex);
 	}
@@ -280,6 +354,11 @@ static void print_help(int argc, char *argv[]) {
 				 "Don't ignore touches made beyond the edge limits.");
 	print_option(long_options+i++, 0, NULL, color,
 				 "Don't consider the touchpad pressed, when it is double tapped.");
+	print_option(long_options+i++, 0, "TYPE", color,
+				  "Enable edge scrolling. TYPE value can be:\n"
+				  " - both: scroll with both left and right edge\n"
+				  " - right: scroll with right edge (default value)\n"
+				  " - left: scroll with left edge");
 	print_option(long_options+i++, 'l', "WHICH", color,
 				 "List caracteritics of input devices. WHICH value can be:\n"
 				 "- candidates: list only candidate devices (default value)\n"
@@ -370,6 +449,21 @@ static int parse_args(int argc, char *argv[]) {
 		case DISABLE_DOUBLE_TAP_OPTION:
 			disable_double_tap = true;
 			break;
+		case EDGE_SCROLLING_OPTION:
+			if (!optarg || !strcmp(optarg, "right")) {
+				right_edge_scrolling = true;
+				left_edge_scrolling = false;
+			} else if (!strcmp(optarg, "left")) {
+				right_edge_scrolling = false;
+				left_edge_scrolling = true;
+			} else if (!strcmp(optarg, "both")) {
+				right_edge_scrolling = true;
+				left_edge_scrolling = true;
+			} else {
+				print_help(argc, argv);
+				return -1;
+			}
+			break;
 		case 'l':
 			if (!optarg || !strcmp(optarg, "candidates")) {
 				list = LIST_CANDIDATES;
@@ -432,14 +526,21 @@ int main(int argc, char *argv[]) {
 	init_sighanlder();
 	unblock_sigint();
 	
-	pthread_t touchap_th;
-	pthread_t mouse_th;
+	pthread_t touchap_listening_th;
+	pthread_t edge_motion_th;
+	pthread_t edge_scrolling_th;
 	
-	pthread_create(&touchap_th, NULL, touchpad_thread, NULL);
-	pthread_create(&mouse_th, NULL, mouse_thread, NULL);
+	bool edge_scrolling = right_edge_scrolling || left_edge_scrolling;
 	
-	pthread_join(touchap_th, NULL);
-	pthread_join(mouse_th, NULL);
+	pthread_create(&touchap_listening_th, NULL, touchpad_listening_thread, NULL);
+	pthread_create(&edge_motion_th, NULL, edge_motion_thread, NULL);
+	if (edge_scrolling)
+		pthread_create(&edge_scrolling_th, NULL, edge_scrolling_thread, NULL);
+	
+	pthread_join(touchap_listening_th, NULL);
+	pthread_join(edge_motion_th, NULL);
+	if (edge_scrolling)
+		pthread_join(edge_scrolling_th, NULL);
 	
 	touchpad_clean(touchpad);
 	mouse_clean(mouse);

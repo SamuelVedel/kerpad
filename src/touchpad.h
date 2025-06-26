@@ -5,13 +5,14 @@
 
 #define DEFAULT_EDGE_THICKNESS 250
 
-#define LIST_NO 0
+#define LIST_NO         0
 #define LIST_CANDIDATES 1
-#define LIST_ALL 2
+#define LIST_ALL        2
 
 typedef struct touchpad touchpad_t;
 
 struct touchpad_info {
+	// Coordinates on the touchpad
 	int x;
 	int y;
 	// -1: touching the left edge
@@ -20,8 +21,18 @@ struct touchpad_info {
 	// -1: touching the top edge
 	//  1: touching the bottom edge
 	int edgey;
+	// true if the touchpad is touched
+	// Touches made beyond the edge limits are ingored
+	// unless no_edge_protection is true
 	bool touched;
+	// true if the touchpad is touched beyond
+	// the edge limits
+	bool edge_touched;
+	// true if the touchpad is pressed
 	bool pressed;
+	// true if the touchpad is double tapped
+	// Double taps made beyond the edge limits are ingored
+	// unless no_edge_protection is true
 	bool double_tapped;
 };
 typedef struct touchpad_info touchpad_info_t;
@@ -90,14 +101,50 @@ void touchpad_read_next_event(touchpad_t *touchpad);
 void touchpad_get_info(touchpad_t *touchpad, touchpad_info_t *info);
 
 /**
- * Wait for the touchpad to be touched or pressed
+ * Wait for the touchpad to be touched
+ *
+ * Touches made beyond the edge limits are ingored
+ * unless no_edge_protection is true
  */
-void touchpad_wait(touchpad_t *touchpad);
+void touchpad_wait_touch(touchpad_t *touchpad);
 
 /**
  * Signal a thread waiting for the touchap
- * to be touched or pressed
+ * to be touched
  */
-void touchpad_signal(touchpad_t *touchpad);
+void touchpad_signal_touch(touchpad_t *touchpad);
+
+/**
+ * Wait for the touchpad to be pressed or double tapped
+ *
+ * Double taps made beyon the edge limits are ingored
+ * unless no_edge_protection is true
+ */
+void touchpad_wait_press(touchpad_t *touchpad);
+
+/**
+ * Signal a thread waiting for the touchap
+ * to be pressed or double tapped
+ */
+void touchpad_signal_press(touchpad_t *touchpad);
+
+/**
+ * Wait for the touchpad to be touched or pressed
+ *
+ * Touches made beyond the edge limits are ingored
+ * unless no_edge_protection is true
+ */
+void touchpad_wait_touch_or_press(touchpad_t *touchpad);
+
+/**
+ * Wait for the touchpad to be touched beyond the edge limits
+ */
+void touchpad_wait_edge_touch(touchpad_t *touchpad);
+
+/**
+ * Signal a thread waiting for the touchap
+ * to be touched beyond the edge limits
+ */
+void touchpad_signal_edge_touch(touchpad_t *touchpad);
 
 #endif // !__TOUCHPAD_H__
