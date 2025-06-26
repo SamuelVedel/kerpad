@@ -475,6 +475,11 @@ static int parse_args(int argc, char *argv[]) {
 			break;
 		case SCROLL_DIV_OPTION:
 			scroll_div = atoi(optarg);
+			if (scroll_div == 0) {
+				error_message("cannot set scrolling division to 0: "
+						"it will provoke a division by 0\n");
+				return -1;
+			}
 			break;
 		case 'l':
 			if (!optarg || !strcmp(optarg, "candidates")) {
