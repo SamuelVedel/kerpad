@@ -44,7 +44,7 @@ sudo ./kerpad -n <device_name>
 
 ### Edge scrolling
 
-Kerpad also provide edge scrolling. Edge scrolling makes the touchpad scroll when you are moving your finger at the edge of it. It is disabled by default, but you can enable it with the `--edge-scroll` option. You can select with this option which side is used for scrolling, see `kerpad --help` or `man kerpad` for more details.
+Kerpad also provide edge scrolling. Edge scrolling makes the touchpad scroll when you are moving your finger at the edge of it. It is disabled by default, but you can enable it with the `--edge-scrolling` option. There are optoins to choose  which edge is used for scrolling, see `kerpad --help` or `man kerpad` for more details.
 
 ### Make it run at boot time
 
@@ -96,4 +96,4 @@ When edge motion is triggered, the mouse will move one pixel each sleep time mic
 
 ### Configure the scroll speed
 
-When edge scrolling is applied, the number of detents is divided by a value. To configure the scroll speed you can change this value with the `--scroll-div` option, if the value is lower, the scroll will be faster and if the value is higher, the scroll will be slower.
+When edge scrolling is applied, the number of detents is divided by a value. To configure the scroll speed you can change this value with the `--scroll-div` option, if the value is lower, the scroll will be faster and if the value is higher, the scroll will be slower. A negative value can be given to reverse the scroll direction.

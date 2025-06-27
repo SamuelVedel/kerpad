@@ -29,7 +29,7 @@ void mouse_move_x(mouse_t *mouse, int dx);
  */
 void mouse_move_y(mouse_t *mouse, int dy);
 
-//void mouse_scroll_x(mouse_t *mouse, int dx);
+void mouse_scroll_x(mouse_t *mouse, int dx);
 
 void mouse_scroll_y(mouse_t *mouse, int dy);
 

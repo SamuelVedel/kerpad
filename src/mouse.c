@@ -31,6 +31,7 @@ mouse_t *mouse_init(const char *name) {
 	ioctl(mouse->ui_fd, UI_SET_RELBIT, REL_X);
 	ioctl(mouse->ui_fd, UI_SET_RELBIT, REL_Y);
 	ioctl(mouse->ui_fd, UI_SET_RELBIT, REL_WHEEL_HI_RES);
+	ioctl(mouse->ui_fd, UI_SET_RELBIT, REL_HWHEEL_HI_RES);
 	
 	usetup.id.bustype = BUS_USB;
 	usetup.id.vendor = 0x1234;
@@ -76,6 +77,13 @@ void mouse_move_x(mouse_t *mouse, int dx) {
 void mouse_move_y(mouse_t *mouse, int dy) {
 	pthread_mutex_lock(&mouse->mutex);
 	mouse_emit(mouse, EV_REL, REL_Y, dy);
+	mouse_emit(mouse, EV_SYN, SYN_REPORT, 0);
+	pthread_mutex_unlock(&mouse->mutex);
+}
+
+void mouse_scroll_x(mouse_t *mouse, int dx) {
+	pthread_mutex_lock(&mouse->mutex);
+	mouse_emit(mouse, EV_REL, REL_HWHEEL_HI_RES, dx);
 	mouse_emit(mouse, EV_SYN, SYN_REPORT, 0);
 	pthread_mutex_unlock(&mouse->mutex);
 }

@@ -3,7 +3,7 @@ title: KERPAD
 section: 1
 header: Kerpad Manual
 footer: kerpad
-date: 2025-06-26
+date: 2025-06-27
 ---
 
 # NAME
@@ -65,14 +65,30 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 **-\-disable-double-tap**
 : Don't consider the touchpad pressed when it is double tapped.
 
-**-\-edge-scrolling**[=TYPE]
-: Enable edge scrolling. It is not recommended to use this option with the **-\-no-edge-protection** option. TYPE value can be:
+**-\-edge-scrolling**
+: Enable edge scrolling. It is not recommended to use this option with the **-\-no-edge-protection** option.
 
-> both: scroll with both left and right edge
+**-\-vertical-scrolling**=EDGE
+: Choose which edge is used for vertical edge scrolling. This option has no effect without the **-\-edge-scrolling** option. EDGE value can be:
 
-> right: scroll with right edge (default value)
+> both: vertical scrolling with both left and right edges
 
-> left: scroll with left edge
+> right: vertical scrolling with the right edge (default value if this option is not used)
+
+> left: vertical scrolling with the left edge
+
+> no: no vertical scrolling
+
+**-\-horizontal-scrolling**=EDGE
+: Choose which edge is used for horizontal edge scrolling. This option has no effect without the **-\-edge-scrolling** option. EDGE value can be:
+
+> both: horizontal scrolling with both top and bottom edges
+
+> bottom: horizontal scrolling with the bottom edge (default value if this option is not used)
+
+> left: horizontal scrolling with the top edge
+
+> no: no horizontal scrolling
 
 **-\-scroll-div**=DIV
 : When edge scrolling is applied, the number of detents is divided by DIV, so you can configure the scrolling speed by changing DIV. DIV default value is 50. A negative value can be given to reverse the scroll direction.
@@ -103,6 +119,8 @@ The following exit values shall be returned:
 # BUGS
 
 This program does not support the multi-touch protocol yet.
+
+There is a slight risk of deadlock when signaling a SIGTERM.
 
 # AUTHOR
 Written by Samuel Vedel.

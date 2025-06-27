@@ -28,14 +28,16 @@
 #define TO_STR(x) #x
 #define MACRO_TO_STR(x) TO_STR(x)
 
-#define EXPLANATION_AREA_LEN 50
+#define EXPLANATION_AREA_LEN 60
 #define OPT_DESCRIPTION_AREA_OFFSET 8
 #define OPT_DESCRIPTION_AREA_LEN EXPLANATION_AREA_LEN-OPT_DESCRIPTION_AREA_OFFSET
 
-#define NO_EDGE_PROTECTION_OPTION 256
-#define DISABLE_DOUBLE_TAP_OPTION 257
-#define EDGE_SCROLLING_OPTION     258
-#define SCROLL_DIV_OPTION         259
+#define NO_EDGE_PROTECTION_OPTION   256
+#define DISABLE_DOUBLE_TAP_OPTION   257
+#define EDGE_SCROLLING_OPTION       258
+#define VERTICAL_SCROLLING_OPTION   259
+#define HORIZONTAL_SCROLLING_OPTION 260
+#define SCROLL_DIV_OPTION           261
 
 static bool running = true;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -72,10 +74,12 @@ static bool verbose = false;
 // the scrolling value will be devided by this variable
 static int scroll_div = DEFAULT_SCROLL_DIV;
 
+static bool edge_scrolling = false;
+
 static bool left_edge_scrolling = false;
-static bool right_edge_scrolling = false;
-//static bool top_edge_scrolling = false;
-//static bool bottom_edge_scrolling = false;
+static bool right_edge_scrolling = true;
+static bool top_edge_scrolling = false;
+static bool bottom_edge_scrolling = true;
 
 // if non null,
 // edge motion will work while
@@ -99,7 +103,9 @@ static struct option long_options[] = {
 	{"always", no_argument, NULL, 'a'},
 	{"no-edge-protection", no_argument, NULL, NO_EDGE_PROTECTION_OPTION},
 	{"disable-double-tap", no_argument, NULL, DISABLE_DOUBLE_TAP_OPTION},
-	{"edge-scrolling", optional_argument, NULL, EDGE_SCROLLING_OPTION},
+	{"edge-scrolling", no_argument, NULL, EDGE_SCROLLING_OPTION},
+	{"vertical-scrolling", required_argument, NULL, VERTICAL_SCROLLING_OPTION},
+	{"horizontal-scrolling", required_argument, NULL, HORIZONTAL_SCROLLING_OPTION},
 	{"scroll-div", required_argument, NULL, SCROLL_DIV_OPTION},
 	{"list", optional_argument, NULL, 'l'},
 	{"verbose", no_argument, NULL, 'v'},
@@ -165,7 +171,7 @@ static void *touchpad_listening_thread(void *arg) {
 }
 
 /**
- * Touchpad responsible for taking care of edge motion
+ * Thread responsible for taking care of edge motion
  */
 static void *edge_motion_thread(void *arg) {
 	UNUSED(arg);
@@ -204,10 +210,13 @@ static void *edge_motion_thread(void *arg) {
 	return NULL;
 }
 
+/**
+ * Thread responsible for taking care of edge scrolling
+ */
 static void *edge_scrolling_thread(void *arg) {
 	UNUSED(arg);
 	
-	//int last_x = -1;
+	int last_x = -1;
 	int last_y = -1;
 	
 	pthread_mutex_lock(&running_mutex);
@@ -218,30 +227,27 @@ static void *edge_scrolling_thread(void *arg) {
 		
 		bool active = info.edge_touched;
 		if (active) {
-			//if (last_x < 0) last_x = info.x;
+			if (last_x < 0) last_x = info.x;
 			if (last_y < 0) last_y = info.y;
 			
 			if ((left_edge_scrolling && info.edgex < 0)
 				|| (right_edge_scrolling && info.edgex > 0)) {
 				// scroll y
 				int diff = info.y-last_y;
-				if (diff) {
-					//printf("%d\n", diff);
-					mouse_scroll_y(mouse, diff*120/scroll_div);
-				}
-			} /*else if ((top_edge_scrolling && info.edgey < 0)
+				if (diff) mouse_scroll_y(mouse, diff*120/scroll_div);
+			} else if ((top_edge_scrolling && info.edgey < 0)
 				|| (bottom_edge_scrolling && info.edgey > 0)) {
 				// scroll x
 				int diff = info.x-last_x;
-				if (diff) mouse_scroll_x(mouse, diff);
-				}*/
+				if (diff) mouse_scroll_x(mouse, -diff*120/scroll_div);
+			}
 			
-			//last_x = info.x;
+			last_x = info.x;
 			last_y = info.y;
 		}
 		
 		if (!active) {
-			// last_x = -1;
+			 last_x = -1;
 			last_y = -1;
 			touchpad_wait_edge_touch(touchpad);
 		} else usleep(scroll_sleep_time);
@@ -358,10 +364,26 @@ static void print_help(int argc, char *argv[]) {
 	print_option(long_options+i++, 0, NULL, color,
 				 "Don't consider the touchpad pressed, when it is double tapped.");
 	print_option(long_options+i++, 0, "TYPE", color,
-				  "Enable edge scrolling. TYPE value can be:\n"
-				  " - both: scroll with both left and right edge\n"
-				  " - right: scroll with right edge (default value)\n"
-				  " - left: scroll with left edge");
+				 "Enable edge scrolling. It is not recommended to use "
+				 "this option with the --no-edge-protection option.");
+	print_option(long_options+i++, 0, "EDGE", color,
+				 "Choose which edge is used for vertical edge scrolling. "
+				 "This option has no effect without the --edge-scrolling option. "
+				 "EDGE value can be:\n"
+				 " - both: vertical scrolling with both left and right edges\n"
+				 " - right: vertical scrollingwith the right edge "
+				 "(default value if this option is not used)\n"
+				 " - left: vertical scrolling with the left edge\n"
+				 " - no: no vertical scrolling.");
+	print_option(long_options+i++, 0, "EDGE", color,
+				 "Choose which edge is used for horizontal edge scrolling. "
+				 "This option has no effect without the --edge-scrolling option. "
+				 "EDGE value can be:\n"
+				 " - both: horizontal scrolling with both top and bottom edges\n"
+				 " - bottom: horizontal scrollin gwith the bottom edge "
+				 "(default value if this option is not used)\n"
+				 " - left: horizontal scrolling with the top edge\n"
+				 " - no: no horizontal scrolling");
 	print_option(long_options+i++, 0, "DIV", color,
 				 "When edge scrolling is applied, the number of detents "
 				 "is divided by DIV, so you can configure the scrolling speed "
@@ -459,7 +481,10 @@ static int parse_args(int argc, char *argv[]) {
 			disable_double_tap = true;
 			break;
 		case EDGE_SCROLLING_OPTION:
-			if (!optarg || !strcmp(optarg, "right")) {
+			edge_scrolling = true;
+			break;
+		case VERTICAL_SCROLLING_OPTION:
+			if (!strcmp(optarg, "right")) {
 				right_edge_scrolling = true;
 				left_edge_scrolling = false;
 			} else if (!strcmp(optarg, "left")) {
@@ -468,6 +493,27 @@ static int parse_args(int argc, char *argv[]) {
 			} else if (!strcmp(optarg, "both")) {
 				right_edge_scrolling = true;
 				left_edge_scrolling = true;
+			} else if (!strcmp(optarg, "no")) {
+				right_edge_scrolling = false;
+				left_edge_scrolling = false;
+			} else {
+				print_help(argc, argv);
+				return -1;
+			}
+			break;
+		case HORIZONTAL_SCROLLING_OPTION:
+			if (!strcmp(optarg, "top")) {
+				top_edge_scrolling = true;
+				bottom_edge_scrolling = false;
+			} else if (!strcmp(optarg, "bottom")) {
+				top_edge_scrolling = false;
+				bottom_edge_scrolling = true;
+			} else if (!strcmp(optarg, "both")) {
+				top_edge_scrolling = true;
+				bottom_edge_scrolling = true;
+			} else if (!strcmp(optarg, "no")) {
+				top_edge_scrolling = false;
+				bottom_edge_scrolling = false;
 			} else {
 				print_help(argc, argv);
 				return -1;
@@ -546,8 +592,6 @@ int main(int argc, char *argv[]) {
 	pthread_t touchap_listening_th;
 	pthread_t edge_motion_th;
 	pthread_t edge_scrolling_th;
-	
-	bool edge_scrolling = right_edge_scrolling || left_edge_scrolling;
 	
 	pthread_create(&touchap_listening_th, NULL, touchpad_listening_thread, NULL);
 	pthread_create(&edge_motion_th, NULL, edge_motion_thread, NULL);
