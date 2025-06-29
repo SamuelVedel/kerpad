@@ -389,7 +389,8 @@ static void print_help(int argc, char *argv[]) {
 				 "is divided by DIV, so you can configure the scrolling speed "
 				 "by changing DIV. DIV default value is "
 				 MACRO_TO_STR(DEFAULT_SCROLL_DIV)
-				 ". A negative value can be given to reverse the scroll direction.");
+				 ". A negative value can be given to reverse the scroll direction. "
+				 "This option has no effect without the --edge-scrolling option.");
 	print_option(long_options+i++, 'l', "WHICH", color,
 				 "List characteristics of input devices. WHICH value can be:\n"
 				 "- candidates: list only candidate devices (default value)\n"

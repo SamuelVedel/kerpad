@@ -91,7 +91,7 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 > no: no horizontal scrolling
 
 **-\-scroll-div**=DIV
-: When edge scrolling is applied, the number of detents is divided by DIV, so you can configure the scrolling speed by changing DIV. DIV default value is 50. A negative value can be given to reverse the scroll direction.
+: When edge scrolling is applied, the number of detents is divided by DIV, so you can configure the scrolling speed by changing DIV. DIV default value is 50. A negative value can be given to reverse the scroll direction. This option has no effect without the **-\-edge-scrolling** option.
 
 **-l**, **-\-list**[=WHICH]
 : List characteristics of input devices. WHICH value can be:
@@ -120,7 +120,7 @@ The following exit values shall be returned:
 
 This program does not support the multi-touch protocol yet.
 
-There is a slight risk of deadlock when signaling a SIGTERM.
+There is a slight risk of deadlock after signaling a SIGTERM.
 
 # AUTHOR
 Written by Samuel Vedel.
