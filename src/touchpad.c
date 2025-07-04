@@ -24,8 +24,8 @@
 #define EVENT_DIR "/dev/input/"
 #define EVENT_FILE_PREFIX "event"
 
-#define EVENT_TIME_MILLI(event) (event.input_event_sec*1000L\
-								 +event.input_event_usec/1000)
+#define EVENT_TIME_MILLI(event) ((event).input_event_sec*1000L \
+								 +(event).input_event_usec/1000)
 
 #define TOUCH_CODE BTN_TOUCH
 #define PRESS_CODE BTN_MOUSE
@@ -111,8 +111,17 @@ static void get_touchpad_resemblance(int fd, touchpad_resemblance_t *tr) {
 	TR_SET_PRESS(*tr, keybit[PRESS_CODE/8]&(1<<(PRESS_CODE%8)));
 }
 
-static void print_touchpad_resemblance(touchpad_resemblance_t *tr) {
-	printf("%s:\n", tr->name);
+/**
+ * Print the toucpad resemblance
+ *
+ * tr: pointer to the touchpad resemblance
+ * path: path to the /dev/input/eventXX file (can be NULL)
+ */
+static void print_touchpad_resemblance(touchpad_resemblance_t *tr,
+									   const char *path) {
+	printf("%s:", tr->name);
+	if (path) printf(" on %s", path);
+	printf("\n");
 	if (TR_HAS_ABS(*tr)) printf(" - support absolute values events\n");
 	if (TR_HAS_XY(*tr)) printf(" - support x/y absolute values events\n");
 	if (TR_HAS_MT(*tr)) printf(" - support mutli-touch protocol\n");
@@ -160,7 +169,7 @@ static int get_touchpad(char *device_name, int list) {
 		int mark = TR_GET_MARK(tr);
 		
 		if (list == LIST_ALL || (list == LIST_CANDIDATES && mark)) {
-			print_touchpad_resemblance(&tr);
+			print_touchpad_resemblance(&tr, path);
 		}
 		
 		bool names_equal = device_name && !strcmp(device_name, tr.name);
