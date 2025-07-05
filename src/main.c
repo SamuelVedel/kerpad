@@ -360,7 +360,7 @@ static void print_help(int argc, char *argv[]) {
 				 "Activate edge motion even "
 				 "when the touchpad is just touched.");
 	print_option(long_options+i++, 0, NULL, color,
-				 "Don't ignore touches made beyond the edge limits.");
+				 "Don't ignore touches and presses made beyond the edge limits.");
 	print_option(long_options+i++, 0, NULL, color,
 				 "Don't consider the touchpad pressed, when it is double tapped.");
 	print_option(long_options+i++, 0, "TYPE", color,

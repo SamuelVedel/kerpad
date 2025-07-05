@@ -29,6 +29,8 @@ struct touchpad_info {
 	// the edge limits
 	bool edge_touched;
 	// true if the touchpad is pressed
+	// Presses made beyond the edge limits are ingored
+	// unless no_edge_protection is true
 	bool pressed;
 	// true if the touchpad is double tapped
 	// Double taps made beyond the edge limits are ingored
@@ -117,7 +119,7 @@ void touchpad_signal_touch(touchpad_t *touchpad);
 /**
  * Wait for the touchpad to be pressed or double tapped
  *
- * Double taps made beyon the edge limits are ingored
+ * Pressed and double taps made beyon the edge limits are ingored
  * unless no_edge_protection is true
  */
 void touchpad_wait_press(touchpad_t *touchpad);
@@ -129,9 +131,9 @@ void touchpad_wait_press(touchpad_t *touchpad);
 void touchpad_signal_press(touchpad_t *touchpad);
 
 /**
- * Wait for the touchpad to be touched or pressed
+ * Wait for the touchpad to be touched, pressed or double tapped
  *
- * Touches made beyond the edge limits are ingored
+ * Touches, presses and double taps made beyond the edge limits are ingored
  * unless no_edge_protection is true
  */
 void touchpad_wait_touch_or_press(touchpad_t *touchpad);

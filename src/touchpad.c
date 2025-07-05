@@ -43,27 +43,32 @@ struct occured_events {
 	unsigned long touch_time;
 };
 
-struct touchpad {
-	touchpad_settings_t settings;
-	int fd;
-	pthread_mutex_t mutex;
-	pthread_cond_t cond_touch;
-	pthread_cond_t cond_press;
-	pthread_cond_t cond_touch_or_press;
-	pthread_cond_t cond_edge_touch;
-	unsigned long last_touch_time;
-	struct occured_events occured;
-	touchpad_info_t info;
-};
-
 struct touchpad_resemblance {
 	char name[255];
 	uint8_t flags;
 };
 typedef struct touchpad_resemblance touchpad_resemblance_t;
 
-#define GET_BIT(var, bit) (var&(1<<bit))
-#define SET_BIT(var, bit, val) if (val) var |= (1<<bit); else var &= ~(1<<bit);
+struct touchpad {
+	touchpad_settings_t settings;
+	
+	touchpad_resemblance_t tr;
+	int fd;
+	
+	pthread_mutex_t mutex;
+	pthread_cond_t cond_touch;
+	pthread_cond_t cond_press;
+	pthread_cond_t cond_touch_or_press;
+	pthread_cond_t cond_edge_touch;
+	
+	unsigned long last_touch_time;
+	struct occured_events occured;
+	
+	touchpad_info_t info;
+};
+
+#define GET_BIT(var, bit) ((var)&(1<<(bit)))
+#define SET_BIT(var, bit, val) if ((val)) (var) |= (1<<(bit)); else (var) &= ~(1<<(bit));
 
 #define TR_HAS_NAME_IN_TOUCHPAD(tr) GET_BIT((tr).flags, 0)
 #define TR_HAS_ABS(tr) GET_BIT((tr).flags, 1)
@@ -132,8 +137,10 @@ static void print_touchpad_resemblance(touchpad_resemblance_t *tr,
 
 /**
  * Return a file descriptor describing the touchpad
- * 
- * if device_name is not null, it will search for the best device
+ *
+ * Store in found_tr the touchpad resemblance of the found device
+ *
+ * If device_name is not null, it will search for the best device
  * with this name. Otherwise it will try to found the device
  * that look the most like a touchpad.
  * 
@@ -142,7 +149,7 @@ static void print_touchpad_resemblance(touchpad_resemblance_t *tr,
  * Return the file descriptor on success, and -1 if no such device
  * are found
  */
-static int get_touchpad(char *device_name, int list) {
+static int get_touchpad(touchpad_resemblance_t *found_tr, char *device_name, int list) {
 	DIR *dir = opendir(EVENT_DIR);
 	exitif(dir == NULL, "cannot open %s directory", EVENT_DIR);
 	struct dirent *de;
@@ -223,6 +230,7 @@ static int get_touchpad(char *device_name, int list) {
 	}
 	
 	fd = open(best_path, O_RDONLY);
+	*found_tr = best_tr;
 	exitif(fd == -1, "cannot open %s", best_path);
 	return (device_ok? fd: -1);
 }
@@ -249,10 +257,12 @@ static void init_edge_limits(touchpad_t *touchpad) {
 }
 
 touchpad_t *touchpad_init(touchpad_settings_t *settings) {
-	int fd = get_touchpad(settings->device_name, settings->list);
+	touchpad_resemblance_t tr = {};
+	int fd = get_touchpad(&tr, settings->device_name, settings->list);
 	if (fd < 0) return NULL;
 	
 	touchpad_t *touchpad = malloc(sizeof(*touchpad));
+	touchpad->tr = tr;
 	touchpad->fd = fd;
 	touchpad->settings = *settings;
 	pthread_mutex_init(&touchpad->mutex, NULL);
@@ -325,9 +335,14 @@ static void applie_occured_events(touchpad_t *touchpad) {
 		}
 	}
 	
-	if (evt->pressed >= 0) {
-		touchpad->info.pressed = evt->pressed;
-		press_detected = true;
+	if (evt->pressed == 0) {
+		touchpad->info.pressed = false;
+	} else if (evt->pressed > 0) {
+		if (dont_touch_borders(touchpad)
+			|| touchpad->settings.no_edge_protection) {
+			touchpad->info.pressed = true;
+			press_detected = true;
+		}
 	}
 	pthread_mutex_unlock(&touchpad->mutex);
 	
@@ -346,8 +361,8 @@ void touchpad_read_next_event(touchpad_t *touchpad) {
 	
 	exitif(read(touchpad->fd, &event, sizeof(event)) == -1,
 		   "cannot read from the touchpad event file");
-	//printf("%d %d %d\n", event.type, event.code, event.value);
-	if (event.type == EV_SYN) {
+	//printf("%d\t%d\t%d\n", event.type, event.code, event.value);
+	if (event.type == SYN_REPORT) {
 		applie_occured_events(touchpad);
 		reset_occured_events(&touchpad->occured);
 	} else if (event.type == EV_KEY) {

@@ -60,7 +60,7 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 : Activate edge motion even when the touchpad is just touched.
 
 **-\-no-edge-protection**
-: Don't ignore touches made beyond the edge limits.
+: Don't ignore touches and presses made beyond the edge limits.
 
 **-\-disable-double-tap**
 : Don't consider the touchpad pressed when it is double tapped.
