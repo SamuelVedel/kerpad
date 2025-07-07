@@ -38,12 +38,15 @@
 #define VERTICAL_SCROLLING_OPTION   259
 #define HORIZONTAL_SCROLLING_OPTION 260
 #define SCROLL_DIV_OPTION           261
+#define NO_EDGE_MOTION_OPTION       262
 
 static bool running = true;
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static mouse_t *mouse = NULL;
 static touchpad_t *touchpad = NULL;
+
+static bool edge_motion = true;
 
 static int minx = -1;
 static int miny = -1;
@@ -70,11 +73,11 @@ static char *device_name = NULL;
 // it will display coordinates
 static bool verbose = false;
 
+static bool edge_scrolling = false;
+
 // When edge scrolling is applied
 // the scrolling value will be devided by this variable
 static int scroll_div = DEFAULT_SCROLL_DIV;
-
-static bool edge_scrolling = false;
 
 static bool left_edge_scrolling = false;
 static bool right_edge_scrolling = true;
@@ -107,6 +110,7 @@ static struct option long_options[] = {
 	{"vertical-scrolling", required_argument, NULL, VERTICAL_SCROLLING_OPTION},
 	{"horizontal-scrolling", required_argument, NULL, HORIZONTAL_SCROLLING_OPTION},
 	{"scroll-div", required_argument, NULL, SCROLL_DIV_OPTION},
+	{"no-edge-motion", no_argument, NULL, NO_EDGE_MOTION_OPTION},
 	{"list", optional_argument, NULL, 'l'},
 	{"verbose", no_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
@@ -391,8 +395,12 @@ static void print_help(int argc, char *argv[]) {
 				 MACRO_TO_STR(DEFAULT_SCROLL_DIV)
 				 ". A negative value can be given to reverse the scroll direction. "
 				 "This option has no effect without the --edge-scrolling option.");
+	print_option(long_options+i++, 0, NULL, color,
+				 "Disable edge motion. If used without --edge-scrolling or "
+				 "--list option, Kerpad will do nothing.");
 	print_option(long_options+i++, 'l', "WHICH", color,
-				 "List characteristics of input devices. WHICH value can be:\n"
+				 "List characteristics of input devices and exit. "
+				 "WHICH value can be:\n"
 				 "- candidates: list only candidate devices (default value)\n"
 				 "- all: list all input devices");
 	print_option(long_options+i++, 'v', NULL, color,
@@ -528,6 +536,9 @@ static int parse_args(int argc, char *argv[]) {
 				return -1;
 			}
 			break;
+		case NO_EDGE_MOTION_OPTION:
+			edge_motion = false;
+			break;
 		case 'l':
 			if (!optarg || !strcmp(optarg, "candidates")) {
 				list = LIST_CANDIDATES;
@@ -562,10 +573,18 @@ static int parse_args(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
 	block_sigint();
 	int parse_result = parse_args(argc, argv);
-	if (parse_result < 0)
+	if (parse_result < 0) {
+		// There was an error with the options
 		return EXIT_FAILURE;
-	else if (parse_result == 1)
+	} else if (parse_result == 1) {
+		// The --help option was used
 		return EXIT_SUCCESS;
+	}
+	
+	if (!edge_motion && !edge_scrolling && list == LIST_NO) {
+		// there are nothing to do
+		return EXIT_SUCCESS;
+	}
 	
 	touchpad_settings_t settings = {
 		.device_name = device_name,
@@ -582,9 +601,12 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 	if (list != LIST_NO) {
+		// We just wanted to list devices
+		// so we can quit now
 		touchpad_clean(touchpad);
 		return EXIT_SUCCESS;
 	}
+	
 	mouse = mouse_init("Kerpad Mouse");
 	
 	init_sighanlder();
@@ -595,14 +617,14 @@ int main(int argc, char *argv[]) {
 	pthread_t edge_scrolling_th;
 	
 	pthread_create(&touchap_listening_th, NULL, touchpad_listening_thread, NULL);
-	pthread_create(&edge_motion_th, NULL, edge_motion_thread, NULL);
+	if (edge_motion)
+		pthread_create(&edge_motion_th, NULL, edge_motion_thread, NULL);
 	if (edge_scrolling)
 		pthread_create(&edge_scrolling_th, NULL, edge_scrolling_thread, NULL);
 	
 	pthread_join(touchap_listening_th, NULL);
-	pthread_join(edge_motion_th, NULL);
-	if (edge_scrolling)
-		pthread_join(edge_scrolling_th, NULL);
+	if (edge_motion) pthread_join(edge_motion_th, NULL);
+	if (edge_scrolling) pthread_join(edge_scrolling_th, NULL);
 	
 	touchpad_clean(touchpad);
 	mouse_clean(mouse);
