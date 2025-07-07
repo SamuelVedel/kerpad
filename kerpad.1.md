@@ -93,8 +93,11 @@ To be considered a touchpad, a device needs to support at least x/y absolute eve
 **-\-scroll-div**=DIV
 : When edge scrolling is applied, the number of detents is divided by DIV, so you can configure the scrolling speed by changing DIV. DIV default value is 50. A negative value can be given to reverse the scroll direction. This option has no effect without the **-\-edge-scrolling** option.
 
+**-\-no-edge-motion**
+: Disable edge motion. If used without **-\-edge-scrolling** or **-\-list** option, Kerpad will do nothing.
+
 **-l**, **-\-list**[=WHICH]
-: List characteristics of input devices. WHICH value can be:
+: List characteristics of input devices and exit. WHICH value can be:
 
 > candidates: list only candidate devices (default value)
 
