@@ -167,9 +167,9 @@ static void *touchpad_listening_thread(void *arg) {
 		pthread_mutex_lock(&running_mutex);
 	}
 	pthread_mutex_unlock(&running_mutex);
-	touchpad_signal_touch(touchpad);
-	touchpad_signal_press(touchpad);
-	touchpad_signal_edge_touch(touchpad);
+	touchpad_broadcast_touch(touchpad);
+	touchpad_broadcast_press(touchpad);
+	touchpad_broadcast_edge_touch(touchpad);
 	
 	return NULL;
 }

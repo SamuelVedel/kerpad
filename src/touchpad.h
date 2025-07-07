@@ -111,10 +111,10 @@ void touchpad_get_info(touchpad_t *touchpad, touchpad_info_t *info);
 void touchpad_wait_touch(touchpad_t *touchpad);
 
 /**
- * Signal a thread waiting for the touchap
+ * Restart all the threads that are waiting for the touchap
  * to be touched
  */
-void touchpad_signal_touch(touchpad_t *touchpad);
+void touchpad_broadcast_touch(touchpad_t *touchpad);
 
 /**
  * Wait for the touchpad to be pressed or double tapped
@@ -125,10 +125,10 @@ void touchpad_signal_touch(touchpad_t *touchpad);
 void touchpad_wait_press(touchpad_t *touchpad);
 
 /**
- * Signal a thread waiting for the touchap
+ * Restart all the threads that are waiting for the touchap
  * to be pressed or double tapped
  */
-void touchpad_signal_press(touchpad_t *touchpad);
+void touchpad_broadcast_press(touchpad_t *touchpad);
 
 /**
  * Wait for the touchpad to be touched, pressed or double tapped
@@ -144,9 +144,9 @@ void touchpad_wait_touch_or_press(touchpad_t *touchpad);
 void touchpad_wait_edge_touch(touchpad_t *touchpad);
 
 /**
- * Signal a thread waiting for the touchap
+ * Restart all the threads that are  waiting for the touchap
  * to be touched beyond the edge limits
  */
-void touchpad_signal_edge_touch(touchpad_t *touchpad);
+void touchpad_broadcast_edge_touch(touchpad_t *touchpad);
 
 #endif // !__TOUCHPAD_H__
