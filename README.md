@@ -44,7 +44,7 @@ sudo ./kerpad -n <device_name>
 
 ### Edge scrolling
 
-Kerpad also provide edge scrolling. Edge scrolling makes the touchpad scroll when you are moving your finger at the edge of it. It is disabled by default, but you can enable it with the `--edge-scrolling` option. There are optoins to choose  which edge is used for scrolling, see `kerpad --help` or `man kerpad` for more details.
+Kerpad also provide edge scrolling. Edge scrolling makes the touchpad scroll when you are moving your finger at the edge of it. It is disabled by default, but you can enable it with the `--edge-scrolling` option. There are options to choose  which edge is used for scrolling, see `kerpad --help` or `man kerpad` for more details.
 
 ### Make it run at boot time
 
