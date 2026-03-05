@@ -123,8 +123,6 @@ The following exit values shall be returned:
 
 This program does not support the multi-touch protocol yet.
 
-There is a slight risk of deadlock after signaling a SIGTERM.
-
 # AUTHOR
 Written by Samuel Vedel.
 

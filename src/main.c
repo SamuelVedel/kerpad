@@ -30,7 +30,7 @@
 
 #define EXPLANATION_AREA_LEN 60
 #define OPT_DESCRIPTION_AREA_OFFSET 8
-#define OPT_DESCRIPTION_AREA_LEN EXPLANATION_AREA_LEN-OPT_DESCRIPTION_AREA_OFFSET
+#define OPT_DESCRIPTION_AREA_LEN (EXPLANATION_AREA_LEN-OPT_DESCRIPTION_AREA_OFFSET)
 
 #define NO_EDGE_PROTECTION_OPTION   256
 #define DISABLE_DOUBLE_TAP_OPTION   257
@@ -41,6 +41,7 @@
 #define NO_EDGE_MOTION_OPTION       262
 
 static bool running = true;
+// To concurently access running
 static pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static mouse_t *mouse = NULL;
@@ -124,6 +125,7 @@ static void handler(int signum) {
 	pthread_mutex_lock(&running_mutex);
 	running = false;
 	pthread_mutex_unlock(&running_mutex);
+	touchpad_stop(touchpad);
 }
 
 static void block_sigint() {
@@ -167,9 +169,6 @@ static void *touchpad_listening_thread(void *arg) {
 		pthread_mutex_lock(&running_mutex);
 	}
 	pthread_mutex_unlock(&running_mutex);
-	touchpad_broadcast_touch(touchpad);
-	touchpad_broadcast_press(touchpad);
-	touchpad_broadcast_edge_touch(touchpad);
 	
 	return NULL;
 }

@@ -65,6 +65,9 @@ struct touchpad {
 	struct occured_events occured;
 	
 	touchpad_info_t info;
+	
+	// this module should not be used if this is true
+	bool stopped;
 };
 
 #define GET_BIT(var, bit) ((var)&(1<<(bit)))
@@ -272,6 +275,7 @@ touchpad_t *touchpad_init(touchpad_settings_t *settings) {
 	pthread_cond_init(&touchpad->cond_edge_touch, NULL);
 	reset_occured_events(&touchpad->occured);
 	init_edge_limits(touchpad);
+	touchpad->stopped = false;
 	return touchpad;
 }
 
@@ -397,7 +401,9 @@ void touchpad_get_info(touchpad_t *touchpad, touchpad_info_t *info) {
 
 void touchpad_wait_touch(touchpad_t *touchpad) {
 	pthread_mutex_lock(&touchpad->mutex);
+	if (!touchpad->stopped) {
 	pthread_cond_wait(&touchpad->cond_touch, &touchpad->mutex);
+	}
 	pthread_mutex_unlock(&touchpad->mutex);
 }
 
@@ -408,7 +414,9 @@ void touchpad_broadcast_touch(touchpad_t *touchpad) {
 
 void touchpad_wait_press(touchpad_t *touchpad) {
 	pthread_mutex_lock(&touchpad->mutex);
+	if (!touchpad->stopped) {
 	pthread_cond_wait(&touchpad->cond_press, &touchpad->mutex);
+	}
 	pthread_mutex_unlock(&touchpad->mutex);
 }
 
@@ -419,13 +427,17 @@ void touchpad_broadcast_press(touchpad_t *touchpad) {
 
 void touchpad_wait_touch_or_press(touchpad_t *touchpad) {
 	pthread_mutex_lock(&touchpad->mutex);
+	if (!touchpad->stopped) {
 	pthread_cond_wait(&touchpad->cond_touch_or_press, &touchpad->mutex);
+	}
 	pthread_mutex_unlock(&touchpad->mutex);
 }
 
 void touchpad_wait_edge_touch(touchpad_t *touchpad) {
 	pthread_mutex_lock(&touchpad->mutex);
+	if (!touchpad->stopped) {
 	pthread_cond_wait(&touchpad->cond_edge_touch, &touchpad->mutex);
+	}
 	pthread_mutex_unlock(&touchpad->mutex);
 }
 
@@ -433,8 +445,18 @@ void touchpad_broadcast_edge_touch(touchpad_t *touchpad) {
 	pthread_cond_broadcast(&touchpad->cond_edge_touch);
 }
 
+void touchpad_stop(touchpad_t *touchpad) {
+	pthread_mutex_lock(&touchpad->mutex);
+	touchpad->stopped = true;
+	pthread_mutex_unlock(&touchpad->mutex);
+	touchpad_broadcast_touch(touchpad);
+	touchpad_broadcast_press(touchpad);
+	touchpad_broadcast_edge_touch(touchpad);
+}
+
 void touchpad_clean(touchpad_t *touchpad) {
 	if (touchpad->fd == -1) return; // should not append
+	if (!touchpad->stopped) touchpad_stop(touchpad);
 	exitif(close(touchpad->fd) == -1, "cannot close the touchpad event file");
 	pthread_mutex_destroy(&touchpad->mutex);
 	pthread_cond_destroy(&touchpad->cond_touch);
