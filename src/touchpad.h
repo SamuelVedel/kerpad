@@ -87,6 +87,13 @@ typedef struct touchpad_settings touchpad_settings_t;
 touchpad_t *touchpad_init(touchpad_settings_t *settings);
 
 /**
+ * Stop the touchpad
+ * Should not be used after this function call
+ * A call to touchpad_stop is still required
+ */
+void touchpad_stop(touchpad_t *touchpad);
+
+/**
  * Clean the touchpad event polling
  */
 void touchpad_clean(touchpad_t *touchpad);

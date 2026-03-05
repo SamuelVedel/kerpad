@@ -402,7 +402,7 @@ void touchpad_get_info(touchpad_t *touchpad, touchpad_info_t *info) {
 void touchpad_wait_touch(touchpad_t *touchpad) {
 	pthread_mutex_lock(&touchpad->mutex);
 	if (!touchpad->stopped) {
-	pthread_cond_wait(&touchpad->cond_touch, &touchpad->mutex);
+		pthread_cond_wait(&touchpad->cond_touch, &touchpad->mutex);
 	}
 	pthread_mutex_unlock(&touchpad->mutex);
 }
@@ -415,7 +415,7 @@ void touchpad_broadcast_touch(touchpad_t *touchpad) {
 void touchpad_wait_press(touchpad_t *touchpad) {
 	pthread_mutex_lock(&touchpad->mutex);
 	if (!touchpad->stopped) {
-	pthread_cond_wait(&touchpad->cond_press, &touchpad->mutex);
+		pthread_cond_wait(&touchpad->cond_press, &touchpad->mutex);
 	}
 	pthread_mutex_unlock(&touchpad->mutex);
 }
@@ -428,7 +428,7 @@ void touchpad_broadcast_press(touchpad_t *touchpad) {
 void touchpad_wait_touch_or_press(touchpad_t *touchpad) {
 	pthread_mutex_lock(&touchpad->mutex);
 	if (!touchpad->stopped) {
-	pthread_cond_wait(&touchpad->cond_touch_or_press, &touchpad->mutex);
+		pthread_cond_wait(&touchpad->cond_touch_or_press, &touchpad->mutex);
 	}
 	pthread_mutex_unlock(&touchpad->mutex);
 }
@@ -436,7 +436,7 @@ void touchpad_wait_touch_or_press(touchpad_t *touchpad) {
 void touchpad_wait_edge_touch(touchpad_t *touchpad) {
 	pthread_mutex_lock(&touchpad->mutex);
 	if (!touchpad->stopped) {
-	pthread_cond_wait(&touchpad->cond_edge_touch, &touchpad->mutex);
+		pthread_cond_wait(&touchpad->cond_edge_touch, &touchpad->mutex);
 	}
 	pthread_mutex_unlock(&touchpad->mutex);
 }
