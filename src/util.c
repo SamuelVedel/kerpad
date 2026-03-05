@@ -17,7 +17,7 @@
 
 void error_message(const char *message, ...) {
 	FORMAT_MSG(message, formated_message);
-	fprintf(stderr, formated_message);
+	fprintf(stderr, "%s\n", formated_message);
 }
 
 bool msgif(bool condition, const char *prefix, ...) {
