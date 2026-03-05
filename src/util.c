@@ -8,27 +8,34 @@
 
 #define PROG_NAME "kerpad"
 
-void error_message(const char *message, ...) {
-	char format_message[255] = PROG_NAME": ";
-	va_list argptr;
-	va_start(argptr, message);
-	vsprintf(format_message+strlen(format_message), message, argptr);
+#define FORMAT_MSG(msg, formated_msg) \
+	char formated_msg[255] = PROG_NAME": ";\
+	va_list argptr;\
+	va_start(argptr, msg);\
+	vsprintf(formated_msg+strlen(formated_msg), msg, argptr);\
 	va_end(argptr);
-	fprintf(stderr, format_message);
+
+void error_message(const char *message, ...) {
+	FORMAT_MSG(message, formated_message);
+	fprintf(stderr, formated_message);
+}
+
+bool msgif(bool condition, const char *prefix, ...) {
+	if (condition) {
+		FORMAT_MSG(prefix, formated_prefix);
+		if (errno != 0) {
+			perror(formated_prefix);
+		} else {
+			fprintf(stderr, "%s\n", formated_prefix);
+		}
+	}
+	return condition;
 }
 
 void exitif(bool condition, const char *prefix, ...) {
 	if (condition) {
-		char format_prefix[255] = PROG_NAME": ";
-		va_list argptr;
-		va_start(argptr, prefix);
-		vsprintf(format_prefix+strlen(format_prefix), prefix, argptr);
-		va_end(argptr);
-		if (errno != 0) {
-			perror(format_prefix);
-		} else {
-			fprintf(stderr, "%s\n", format_prefix);
-		}
+		FORMAT_MSG(prefix, formated_prefix);
+		msgif(condition, formated_prefix);
 		exit(EXIT_FAILURE);
 	}
 }
