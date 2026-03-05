@@ -35,25 +35,25 @@ The above drawing represents you touchpad. When your  touchpad is pressed (or do
 To be considered a touchpad, a device needs to support at least x/y absolute events and touch events. However, a device that support multi-touch protocol, support press events or have the word "Touchpad" in its name, is more likely to be selected by this program.
 
 # OPTIONS
-**-t** edge_thickness, **-\-thickness**=edge_thickness
+**-t** EDGE_THICKNESS, **-\-thickness**=EDGE_THICKNESS
 : Change the edge thickness.
 
-**-x** min_x, **-\-minx**=min_x
+**-x** MIN_X, **-\-minx**=MIN_X
 : Change min_x.
 
-**-X** max_x, **-\-maxx**=max_x
+**-X** MAX_X, **-\-maxx**=MAX_X
 : Change max_x.
 
-**-y** min_y, **-\-miny**=min_y
+**-y** MIN_Y, **-\-miny**=MIN_Y
 : Change min_y.
 
-**-Y** max_y, **-\-maxy**=max_y
+**-Y** MAX_Y, **-\-maxy**=MAX_Y
 : Change max_y.
 
-**-s** sleep_time, **-\-sleep-time**=sleep_time
+**-s** SLEEP_TIME, **-\-sleep-time**=SLEEP_TIME
 : When edge motion is triggered, the mouse will move one pixel each sleep_time microseconds. The sleep time will be slightly longer when touching a corner. The default sleep time is 3000.
 
-**-n** name, **-\-name**=name
+**-n** NAME, **-\-name**=NAME
 : Specify the touchpad name.
 
 **-a**, **-\-always**
